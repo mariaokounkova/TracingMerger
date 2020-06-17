@@ -1,0 +1,16 @@
+#Evolution.input
+
+RunTimeInHours = __RUN_TIME_IN_HOURS__;
+IsRestart = false;
+ProcsPerNode = __PROCS_PER_NODE__;
+CheckpointTimeInHours = 0.5;
+UseH5Output = true;
+
+#If you are doing an analytic run, you need to uncommment this out
+#AddItemsToDataBox =;
+#    Item
+#    (
+#      Name = EinsteinSolns;
+#      Type = EinsteinSolution;
+#      Value = KerrSchild(Spin=(0, 0, 0.95));
+#    );

@@ -1,0 +1,70 @@
+##
+Output =
+(
+  DiskTriggers =
+        Add(
+                    DenseTrigger = EveryDeltaT(DeltaT = -1.0; Tstart = __START_TIME__);
+                                    );
+                ForceDiskTriggerOnTermination = true;
+                          MemoryTriggers =;
+                                    );
+
+#---------------------
+#  Ode Integrator Options
+#---------------------
+Evolution =
+(
+  BackwardsInTime = true;
+  EndTime = __END_TIME__;
+  TerminateEvolutionWhenOffDomain = false;
+  OdeErrorMeasure = AbsRel(TolRatio = 1.);
+  OdeErrorObservers = ;
+
+  TargetTerminators =
+    CompositionTargetTerminator
+    (
+      TargetTerminator = ScalarTargetTerminator
+      (
+        TensorName = q;
+        Comparator = GreaterThan;
+        ##Value = 100;
+        Value = 200;
+      );
+      Terminator = DotProductTerminator
+      (
+        Tensor1Name = q;
+        Tensor2Name = p;
+        Comparator = GreaterThan;
+        Value = 0;
+      );
+    );
+  Terminators =
+    MinkowskiNormTerminator
+    (
+      TensorName = lnLapseP0;
+      Comparator = GreaterThan;
+      ##Value = 10;
+      Value = 12;
+    );
+
+  OdeIntegrator =
+    AdaptiveDense
+    (
+      OdeStepper =
+        DormandPrince5
+        (
+          # Use this algorithm when using dumped metric data
+          ExplicitRhsAlgorithm = BohnNumericalWithLapseP0;
+
+          # Use this algorithm when using analytic metrics
+          #ExplicitRhsAlgorithm = BohnAnalyticWithLapseP0;
+        );
+        OdeController =
+          ProportionalIntegral
+          (
+            InitialDt = -0.1;
+            MinimumDt = 1e-6;
+            Tolerance = 1e-5;
+          );
+    );
+);

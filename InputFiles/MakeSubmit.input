@@ -1,0 +1,17 @@
+# This input file is used to write Submit.sh.
+# If you edit this file by hand, run `MakeSubmit.py update`.
+[main]
+Account = sxs
+Script = 
+	EvolveGeodesicsWrapper -a="__EmailAddresses__" -f="__TerminationInfoFile__"
+	
+Queue = 
+ForceCores = False
+CoresPerNode = 24
+Cores = 24
+Jobname = TraceHeadOn_-43_75_50
+AllowUnusedCores = True
+Hours = 24.0
+Preempt = 0
+ForceCoresPerNode = False
+

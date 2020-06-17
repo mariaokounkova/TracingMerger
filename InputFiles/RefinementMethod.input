@@ -1,0 +1,14 @@
+
+# use this for a 2d image with refinement
+# * decrease MaxSkySep for greater resolution on the sky (i.e. more geodesics)
+# * InitialResolutionX specifies number of geodesics across width of image,
+#   the number across height is inferred from camera's aspect ratio
+# * first iteration traces a hexagonal grid of geodesics, subsequent iterations
+#   use adaptive refinement to choose geodesics to evolve
+RefinementMethod = SpaceOneFrame(
+  MaxSkySep = 5;
+  InitialResolutionX = 200;
+  MaxIterations = 10;
+  MaxRefinementDepthPerIteration = 3;
+);
+

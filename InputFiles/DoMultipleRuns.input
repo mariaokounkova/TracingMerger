@@ -1,0 +1,138 @@
+#!/usr/bin/env perl
+use warnings FATAL => 'all';
+use List::Util qw[min max];
+use Math::Trig qw[pi];
+use Cwd;
+
+######### User defined options here ###################################
+
+
+$HoursToRun = 24;   # if undef, determined by GetSubmissionScript
+$NodesForRun = 1;
+
+#should be equal to the number of procs per node
+$ThreadsPerNode = 24;
+
+#This is generated from GetSubmissionScript and EvolveGeodesicsWrapper
+#Choose something else to use your own submission file.
+$SubmissionScript="MakeSubmit.input";
+
+#When do you want the geodesics to start evolving?
+$StartTime = 269.7;
+$EndTime = 0.0;
+
+#Camera radius
+$CameraRad = 100.0;
+
+#Array of angles
+$N_theta = 3;
+$N_phi = 3;
+
+@theta_range = (0.0..$N_theta);
+# Pop off the poles for theta - 
+# we'll in these values to the x,y,z array after
+shift(@theta_range);
+pop(@theta_range);
+@phi_range = (0.0..$N_phi);
+
+## u and v arrays
+@v_array = map { $_ * pi / $N_theta} @theta_range;
+@u_array = map { $_ * 2.0 * pi / $N_phi} @phi_range;
+
+## x, y, z values
+@x_array = ();
+@y_array = ();
+@z_array = ();
+foreach my $v (@v_array) {
+  foreach my $u (@u_array) {
+    push(@x_array, $CameraRad * cos($u) * sin($v));
+    push(@y_array, $CameraRad * sin($u) * sin($v));
+    push(@z_array, $CameraRad * cos($v));
+  }
+}
+
+## add on value for the poles
+push(@x_array, 0.0);
+push(@x_array, 0.0);
+push(@y_array, 0.0);
+push(@y_array, 0.0);
+push(@z_array, $CameraRad);
+push(@z_array, -$CameraRad);
+
+#Geodesics SHOULD be terminated by the distance check or the redshift check,
+# to see if it comes from infinity or the black hole, respectively.
+#This time is used to stop the evolution for geodesices for which we were
+# unable to determine the origin.
+#In general it should be
+# $StartTime - {camera distance} - {termination distance, usually 100} - O(200)
+
+#Final notes:
+# * You can set the cutoff value of redshift in Geodesic.input, by changing
+#   the MinkowskiNormTerminator Value.
+# * You can set the cutoff used to determine if a geodesic came from infinity
+#   by changing the OffsetSphereTerminator value in Geodesic.input
+
+######### DON'T NEED TO CHANGE ANYTHING AFTER HERE ####################
+
+## Loop over all of the angles
+for (my $i = 0; $i < @x_array; ++$i) {
+
+## Let's just round the values 
+$CameraX = int($x_array[$i]);
+$CameraY = int($y_array[$i]);
+$CameraZ = int($z_array[$i]);
+
+$RunName="TraceHeadOn_".$CameraX."_".$CameraY."_".$CameraZ;
+#$RunName="TraceHeadOn_".$CameraX."_".$CameraY."_".$CameraZ;
+
+my $TotalNumProcs = int($ThreadsPerNode * $NodesForRun);
+CreateSubmitScript(
+  Cores    => $TotalNumProcs,
+  Jobname  => $RunName,
+  Hours    => $HoursToRun,
+  Filename => "Qsub.input",
+);
+
+# Read updated HoursToRun from Submit script
+unless(defined($HoursToRun)) {
+  my $text = Utils::ReadFile('MakeSubmit.input');
+  if($text =~ m|^\s*Hours\s*=\s*(\S+)\s*$|m) {
+    $HoursToRun = $1;
+  } else {
+    die "Cannot find 'Hours' in MakeSubmit.input";
+  }
+}
+
+###### Get the preferences set in the user's ~/.SpEC file ##############
+my %opts = RunGetDotSpecOptions();
+
+$EmailAddresses = $opts{"EmailAddresses"};
+$TerminationInfoFile = $opts{"TerminationInfoFile"};
+
+########## READY TO DO RUNS! ####################
+
+$RunDirectory="${RunName}/Lev_AA/Run_AA";
+
+RunInDirectory($RunDirectory,
+{
+"Camera.input" =>
+  {
+    "__START_TIME__"=>$StartTime
+  },
+"Evolution.input" =>
+  {
+    "__RUN_TIME_IN_HOURS__"=>sprintf("%.2f", $HoursToRun),
+    "__PROCS_PER_NODE__"=>$ThreadsPerNode,
+  },
+"Geodesic.input" =>
+  {
+    "__END_TIME__"=>$EndTime,
+    "__START_TIME__"=>$StartTime
+  },
+"$SubmissionScript" =>
+  {
+    "__EmailAddresses__" => $EmailAddresses,
+    "__TerminationInfoFile__" => $TerminationInfoFile,
+  }
+}); #end of run in directory
+}
