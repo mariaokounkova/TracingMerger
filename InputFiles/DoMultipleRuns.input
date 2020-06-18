@@ -89,7 +89,6 @@ $CameraZ = int($z_array[$i]);
 print $CameraX." ".$CameraY." ".$CameraZ."\n";
 
 $RunName="TraceHeadOn_".$CameraX."_".$CameraY."_".$CameraZ;
-#$RunName="TraceHeadOn_".$CameraX."_".$CameraY."_".$CameraZ;
 
 my $TotalNumProcs = int($ThreadsPerNode * $NodesForRun);
 CreateSubmitScript(
@@ -127,6 +126,9 @@ RunInDirectory($RunDirectory,
     "__CAMERA_X__"=>$CameraX,
     "__CAMERA_Y__"=>$CameraY,
     "__CAMERA_Z__"=>$CameraZ,
+    "__DIR_X__"=>-$CameraX,
+    "__DIR_Y__"=>-$CameraY,
+    "__DIR_Z__"=>-$CameraZ,
   },
 "Evolution.input" =>
   {
