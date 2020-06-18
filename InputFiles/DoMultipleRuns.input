@@ -82,13 +82,13 @@ push(@z_array, -$CameraRad);
 for (my $i = 0; $i < @x_array; ++$i) {
 
 ## Let's just round the values 
-$CameraX = int($x_array[$i]);
-$CameraY = int($y_array[$i]);
-$CameraZ = int($z_array[$i]);
+$CameraX = $x_array[$i];
+$CameraY = $y_array[$i];
+$CameraZ = $z_array[$i];
 
 print $CameraX." ".$CameraY." ".$CameraZ."\n";
 
-$RunName="TraceHeadOn_".$CameraX."_".$CameraY."_".$CameraZ;
+$RunName="TraceHeadOn_".int($CameraX)."_".int($CameraY)."_".int($CameraZ);
 
 my $TotalNumProcs = int($ThreadsPerNode * $NodesForRun);
 CreateSubmitScript(
