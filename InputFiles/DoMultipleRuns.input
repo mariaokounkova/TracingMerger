@@ -33,11 +33,12 @@ $N_phi = 3;
 # we'll in these values to the x,y,z array after
 shift(@theta_range);
 pop(@theta_range);
-@phi_range = (0.0..$N_phi);
+## Excludes the 0, 2*pi repetition
+@phi_range = (0.0..$N_phi-1);
 
 ## u and v arrays
 @v_array = map { $_ * pi / $N_theta} @theta_range;
-@u_array = map { $_ * 2.0 * pi / $N_phi} @phi_range;
+@u_array = map { $_ * 2.0 * pi / ($N_phi)} @phi_range;
 
 ## x, y, z values
 @x_array = ();
@@ -59,6 +60,9 @@ push(@y_array, 0.0);
 push(@z_array, $CameraRad);
 push(@z_array, -$CameraRad);
 
+#for (my $i = 0; $i < @x_array; ++$i) {
+#  print $i." ".$x_array[$i]." ".$y_array[$i]." ".$z_array[$i]."\n";
+#}
 #Geodesics SHOULD be terminated by the distance check or the redshift check,
 # to see if it comes from infinity or the black hole, respectively.
 #This time is used to stop the evolution for geodesices for which we were
@@ -81,6 +85,8 @@ for (my $i = 0; $i < @x_array; ++$i) {
 $CameraX = int($x_array[$i]);
 $CameraY = int($y_array[$i]);
 $CameraZ = int($z_array[$i]);
+
+print $CameraX." ".$CameraY." ".$CameraZ."\n";
 
 $RunName="TraceHeadOn_".$CameraX."_".$CameraY."_".$CameraZ;
 #$RunName="TraceHeadOn_".$CameraX."_".$CameraY."_".$CameraZ;
@@ -117,7 +123,10 @@ RunInDirectory($RunDirectory,
 {
 "Camera.input" =>
   {
-    "__START_TIME__"=>$StartTime
+    "__START_TIME__"=>$StartTime,
+    "__CAMERA_X__"=>$CameraX,
+    "__CAMERA_Y__"=>$CameraY,
+    "__CAMERA_Z__"=>$CameraZ,
   },
 "Evolution.input" =>
   {

@@ -4,8 +4,10 @@ Camera = Pinhole(
             HorizontalApertureAngle = 30; #in degrees
             VerticalApertureAngle = 30; #in degrees
             CameraTime = __START_TIME__;
-            CameraPosition = 0., 0., 100.0;
+            CameraPosition = __CAMERA_X__, __CAMERA_Y__, __CAMERA_Z__;
             CameraVelocity = 0., 0., 0.;
-            CameraDirection = 0, 0., -1.;
-            CameraUpDirection = 0., 1., 0.;
+            ## Pointing towards (0, 0, 0)
+            CameraDirection = -__CAMERA_X__, -__CAMERA_Y__, -__CAMERA_Z__;
+            ## Don't worry about the up direction for now...
+            CameraUpDirection = 0., 0., 1.;
         );
