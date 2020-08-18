@@ -5,68 +5,83 @@ import os
 import scipy
 from scipy import integrate
 
-def read_geodesic_data(p, t_start, t_end):
+def ReadGeodesicData(p, t_start, t_end):
     """ Read in an array of times and positions for all geodesics at once, 
         and return the trajectories indexed by geodesic """
         
-    file = p + 'Node0.h5'
-    f = h5py.File(file, 'r')
-    ## grab the .dat files
-    keys = [k for k in f.keys() if 'dat' in k]
-    ## Array of times from the .dat files
-    times = [float(k.split('.dat')[0]) for k in keys]
-    ## sort keys according to times
-    times, keys = zip(*sorted(zip(times, keys)))
-    #times = times[::-1]
-    #keys = keys[::-1]
-    ## grab the number of geodesics
-    N_geodesics = len(f[keys[-1]][:,0])
-    print("Total geodesics: ", N_geodesics, "Time steps: ", len(times))
-    ## Minimum index
-    m = int(f[keys[-1]][:,0][0])
-    print("Minimum index of this refinement iteration: ", m)
+    def AppendGeodesicsTime(Lev, Run):
+
+        print("Reading Geodesic data for " + Lev + " and " + Run)
+
+        file = p + '/' + Lev + '/' + Run + '/Run/Node0.h5'
+        f = h5py.File(file, 'r')
+        ## grab the .dat files
+        keys = [k for k in f.keys() if 'dat' in k]
+        ## Array of times from the .dat files
+        times = [float(k.split('.dat')[0]) for k in keys]
+        ## sort keys according to times
+        times, keys = zip(*sorted(zip(times, keys)))
+        # grab the number of geodesics
+        N_geodesics = len(f[keys[-1]][:,0])
+        print("Total geodesics: ", N_geodesics, "Time steps: ", len(times))
+        ## Minimum index
+        m = int(f[keys[-1]][:,0][0])
+        print("Minimum index of this refinement iteration: ", m)
     
-    X = [ [] for _ in range(N_geodesics)]
-    Y = [ [] for _ in range(N_geodesics)]
-    Z = [ [] for _ in range(N_geodesics)]
-    L = [ [] for _ in range(N_geodesics)]
-    T = [ [] for _ in range(N_geodesics)]
+        X = [ [] for _ in range(N_geodesics)]
+        Y = [ [] for _ in range(N_geodesics)]
+        Z = [ [] for _ in range(N_geodesics)]
+        L = [ [] for _ in range(N_geodesics)]
+        T = [ [] for _ in range(N_geodesics)]
     
-    for k, t in zip(keys, times):
-        if ((t > t_start) and (t < t_end)):
-            print("%.1f  " % t, end = '')
-            data = f[k]
-            ## indices and positions for all geodesics at this time
-            indices = data[:,0]
-            l = data[:,1]
-            x = data[:,5]
-            y = data[:,6]
-            z = data[:,7]
-            ## fill in the array for each index
-            for i, j in zip(indices.astype(int), range(len(indices))):
-                X[i-m] = np.append(X[i-m], x[j])
-                Y[i-m] = np.append(Y[i-m], y[j])
-                Z[i-m] = np.append(Z[i-m], z[j])
-                L[i-m] = np.append(L[i-m], l[j])
-                T[i-m] = np.append(T[i-m], t)
+        for k, t in zip(keys, times):
+            if ((t > t_start) and (t < t_end)):
+                print("%.1f  " % t, end = '')
+                data = f[k]
+                ## indices and positions for all geodesics at this time
+                indices = data[:,0]
+                l = data[:,1]
+                x = data[:,5]
+                y = data[:,6]
+                z = data[:,7]
+                ## fill in the array for each index
+                for i, j in zip(indices.astype(int), range(len(indices))):
+                    X[i-m] = np.append(X[i-m], x[j])
+                    Y[i-m] = np.append(Y[i-m], y[j])
+                    Z[i-m] = np.append(Z[i-m], z[j])
+                    L[i-m] = np.append(L[i-m], l[j])
+                    T[i-m] = np.append(T[i-m], t)
+
+        print("\n")
+        ## Once we have the arrays constructed, append them to the file
+        print('Read the geodesic data, now writing the files')
+        for a in range(len(T)):
+            if (len(T[a]) > 1):
+                ## Remember to add in the minimum index since the starting 
+                ## geodesic index just gets incremented during reach refinement
+                ## level (by the number of geodesics that came from the levels before)
+                ff = open(p + '/Trajectories/' + str(a + m) + '.dat','ab')
+                np.savetxt(ff, np.c_[T[a],X[a],Y[a],Z[a],L[a]])
+                ff.close()
+        print('Finished writing the files')
             
-    print("\n")
-    return T, X, Y, Z, L
+    ## Go through the refinement levels and the segments
+    RefinementLevs = [el for el in os.listdir(p) if "Lev" in el]
+    print("RefinementLevs:", RefinementLevs)
+    for lev in RefinementLevs:
+        ### MASHA remember to do the offset! -- with min index
+        Segments = os.listdir(p + '/' + lev)
+        print(lev + " Segments:", Segments)
+        for segment in Segments:
+            AppendGeodesicsTime(lev, segment)
 
 def MakeGeodesicDatFiles(p, t_start, t_end):
-	""" Print the result of read_geodesic_data to files """
-	print('Reading the geodesic data')
-	T, X, Y, Z, L = read_geodesic_data(p, t_start, t_end)
-	print('Read the geodesic data, now writing the files')
-	for a in range(len(T)):
-	    if (len(T[a]) > 1):
-	        np.savetxt(p + '/Trajectories/' + str(a) + '.dat', np.c_[T[a],X[a],
-	                                                                    Y[a],Z[a],L[a]])
-	print('Finished writing the files')
+    """ Print the result of ReadGeodesicData to files """
+    ReadGeodesicData(p, t_start, t_end)
 
 def GetGeodesicTrajectory(p, n):
 	""" Read in the post-processed trajectory for the nth geodesic """
-	f = p + 'Trajectories/' + str(n) + '.dat'
+	f = p + '/Trajectories/' + str(n) + '.dat'
 	t, x, y, z, lapse = np.loadtxt(f, comments="#",usecols=([0,1,2,3,4]),unpack=True)
 	return t, x, y, z, lapse
 
@@ -91,11 +106,11 @@ def MakeZeroCrossingsFile(p):
         that we only have to compute the number of zero crossings once """
     ns = GetGeodesicIndices(p)
     crossings = [ComputeZeroCrossings(p, n) for n in ns]
-    np.savetxt(p + 'ZeroCrossings.dat', np.c_[ns, crossings], fmt = '%d %d')
+    np.savetxt(p + '/ZeroCrossings.dat', np.c_[ns, crossings], fmt = '%d %d')
     
 def GetGeodesicsZeroCrossingsIndices(p, N):
     """ Return the indices of the geodesics that make N zero-crossings """
-    f = p + 'ZeroCrossings.dat'
+    f = p + '/ZeroCrossings.dat'
     ns, zero_crossings = np.loadtxt(f, comments="#",usecols=([0,1]),unpack=True,dtype=int)
     indices = ns[np.where(zero_crossings == N)[0]]
     return indices
@@ -158,14 +173,14 @@ def MakeFrenetSerretDatFiles(p):
         
 def GetFrenetSerretVectors(p, n):
     """ Read in the post-processed trajectory for the nth geodesic """
-    f = p + 'FrenetSerret/' + str(n) + '.dat'
+    f = p + '/FrenetSerret/' + str(n) + '.dat'
     t, kappa, T_x, T_y, T_z, N_x, N_y, N_z, B_x, B_y, B_z \
         = np.loadtxt(f, comments="#",usecols=(range(11)),unpack=True)
     return t, kappa, T_x, T_y, T_z, N_x, N_y, N_z, B_x, B_y, B_z
   
 def GetFrenetSerretCurvature(p, n):
     """ Read in the post-processed curvature for the nth geodesic """
-    f = p + 'FrenetSerret/' + str(n) + '.dat'
+    f = p + '/FrenetSerret/' + str(n) + '.dat'
     t, kappa = np.loadtxt(f, comments="#",usecols=([0,1]),unpack=True)
     return t, kappa
 
@@ -191,12 +206,12 @@ def MakeMaxCurvatureFile(p):
         Y[i] = y[index]
         Z[i] = z[index]
     
-    np.savetxt(p + 'MaxCurvatures.dat', np.c_[ns, MaxKappa, T, X, Y, Z], fmt = '%d %f %f %f %f %f')
+    np.savetxt(p + '/MaxCurvatures.dat', np.c_[ns, MaxKappa, T, X, Y, Z], fmt = '%d %f %f %f %f %f')
 
 def GetFrenetSerretMaxCurvatures(p, loc = False):
     """ Read in the post-processed max curvature for all geodesics
         if loc == True, then also return the location"""
-    f = p + 'MaxCurvatures.dat'
+    f = p + '/MaxCurvatures.dat'
     ns, kappa, t, x, y, z = np.loadtxt(f, comments="#",usecols=([0,1,2,3,4,5]),unpack=True)
     if loc == False:
         return ns.astype(int), kappa
@@ -206,7 +221,7 @@ def GetFrenetSerretMaxCurvatures(p, loc = False):
 def GetFrenetSerretMaxCurvature(p, n, loc = False):
     """ Read in the post-processed max curvature for the nth geodesic 
         if loc == True, then also return the location"""
-    f = p + 'MaxCurvatures.dat'
+    f = p + '/MaxCurvatures.dat'
     ns, kappa, t, x, y, z = np.loadtxt(f, comments="#",usecols=([0,1,2,3,4,5]),unpack=True)
     index = np.where(ns == n)[0][0]
     print(index)
@@ -217,28 +232,35 @@ def GetFrenetSerretMaxCurvature(p, n, loc = False):
 
 def main():
 
-	p = sys.argv[1]
+    p = sys.argv[1]
 
-	## Make required directories
-	os.mkdir(p + 'Trajectories')
-	os.mkdir(p + 'FrenetSerret')
+    ## Make required directories
+    try:
+        os.mkdir(p + '/Trajectories')
+    except:
+        print("Trajectory directory already exists")
 
-	print("Processing geodesics for " + p)
-	## Make geodesic dat files
-	print("Making the geodesic dat files")
-	MakeGeodesicDatFiles(p, -1, 400)
+    try:
+        os.mkdir(p + '/FrenetSerret')
+    except:
+        print("FrenetSerret directory already exists")
 
-	## Compute zero crossings
-	print("Computing zero crossings")
-	MakeZeroCrossingsFile(p)
+    print("Processing geodesics for " + p)
+    ## Make geodesic dat files
+    print("Making the geodesic dat files")
+    MakeGeodesicDatFiles(p, -1, 400)
 
-	## Compute Frenet-Serret
-	print("Computing Frenet-Serret")
-	MakeFrenetSerretDatFiles(p)
+    # ## Compute zero crossings
+    # print("Computing zero crossings")
+    # MakeZeroCrossingsFile(p)
 
-	## Compute max curvature file
-	print("Computing max curvatures")
-	MakeMaxCurvatureFile(p)
+    # ## Compute Frenet-Serret
+    # print("Computing Frenet-Serret")
+    # MakeFrenetSerretDatFiles(p)
+
+    # ## Compute max curvature file
+    # print("Computing max curvatures")
+    # MakeMaxCurvatureFile(p)
 
 if __name__ == "__main__":
     main()
