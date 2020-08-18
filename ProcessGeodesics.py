@@ -70,7 +70,7 @@ def ReadGeodesicData(p, t_start, t_end):
     print("RefinementLevs:", RefinementLevs)
     for lev in RefinementLevs:
         ### MASHA remember to do the offset! -- with min index
-        Segments = os.listdir(p + '/' + lev)
+        Segments = [el for el in os.listdir(p + '/' + lev) if "Run" in el] 
         print(lev + " Segments:", Segments)
         for segment in Segments:
             AppendGeodesicsTime(lev, segment)
