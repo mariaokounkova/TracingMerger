@@ -26,7 +26,7 @@ def ReadGeodesicData(p, t_start, t_end):
         print("Total geodesics: ", N_geodesics, "Time steps: ", len(times))
         ## Minimum index
         m = int(f[keys[-1]][:,0][0])
-        print("Minimum index of this refinement iteration: ", m)
+        print("Geodesic index offset of this refinement iteration: ", m)
     
         X = [ [] for _ in range(N_geodesics)]
         Y = [ [] for _ in range(N_geodesics)]
@@ -69,7 +69,7 @@ def ReadGeodesicData(p, t_start, t_end):
     RefinementLevs = [el for el in os.listdir(p) if "Lev" in el]
     print("RefinementLevs:", RefinementLevs)
     for lev in RefinementLevs:
-        ### MASHA remember to do the offset! -- with min index
+
         Segments = [el for el in os.listdir(p + '/' + lev) if "Run" in el] 
         print(lev + " Segments:", Segments)
         for segment in Segments:
