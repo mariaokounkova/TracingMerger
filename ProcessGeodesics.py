@@ -40,10 +40,23 @@ def ReadGeodesicData(p, t_start, t_end):
                 data = f[k]
                 ## indices and positions for all geodesics at this time
                 indices = data[:,0]
-                l = data[:,1]
-                x = data[:,5]
-                y = data[:,6]
-                z = data[:,7]
+                if (len(data[0]) == 7):
+                    """ If we've run the numerical evolution so that we haven't 
+                        evolved lapse p0 -- just set lapsep0 to 1 in the files. 
+                        This field need to be in the resulting .dat file for the 
+                        paraview trajectory visualization"""
+                    x = data[:,4]
+                    y = data[:,5]
+                    z = data[:,6]
+                    l = np.ones(len(x))
+                elif (len(data[0]) == 8):
+                    """ If we have evolved lapse p0"""
+                    l = data[:,1]
+                    x = data[:,5]
+                    y = data[:,6]
+                    z = data[:,7]
+                else:
+                    print("Unrecognized number of variables")
                 ## fill in the array for each index
                 for i, j in zip(indices.astype(int), range(len(indices))):
                     X[i-m] = np.append(X[i-m], x[j])
