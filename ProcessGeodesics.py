@@ -74,12 +74,13 @@ def ReadGeodesicData(p, t_start, t_end):
                 ## geodesic index just gets incremented during reach refinement
                 ## level (by the number of geodesics that came from the levels before)
                 ff = open(p + '/Trajectories/' + str(a + m) + '.dat','ab')
-                np.savetxt(ff, np.c_[T[a],X[a],Y[a],Z[a],L[a]])
+                np.savetxt(ff, np.c_[T[a][2:],X[a][2:],Y[a][2:],Z[a][2:],L[a][2:]])
                 ff.close()
         print('Finished writing the files')
             
     ## Go through the refinement levels and the segments
-    RefinementLevs = [el for el in os.listdir(p) if "Lev" in el]
+    ##RefinementLevs = [el for el in os.listdir(p) if "Lev" in el]
+    RefinementLevs = ["Lev_AA"]
     print("RefinementLevs:", RefinementLevs)
     for lev in RefinementLevs:
 
@@ -93,10 +94,10 @@ def MakeGeodesicDatFiles(p, t_start, t_end):
     ReadGeodesicData(p, t_start, t_end)
 
 def GetGeodesicTrajectory(p, n):
-	""" Read in the post-processed trajectory for the nth geodesic """
-	f = p + '/Trajectories/' + str(n) + '.dat'
-	t, x, y, z, lapse = np.loadtxt(f, comments="#",usecols=([0,1,2,3,4]),unpack=True)
-	return t, x, y, z, lapse
+  """ Read in the post-processed trajectory for the nth geodesic """
+  f = p + '/Trajectories/' + str(n) + '.dat'
+  t, x, y, z, lapse = np.loadtxt(f, comments="#",usecols=([0,1,2,3,4]),unpack=True)
+  return t, x, y, z, lapse
 
 def GetGeodesicIndices(p):
     """ Return the indices of all of the geodesics we have printed to file """
@@ -261,19 +262,19 @@ def main():
     print("Processing geodesics for " + p)
     ## Make geodesic dat files
     print("Making the geodesic dat files")
-    MakeGeodesicDatFiles(p, -1, 400)
+    MakeGeodesicDatFiles(p, 330, 1000)
 
-    # ## Compute zero crossings
-    # print("Computing zero crossings")
-    # MakeZeroCrossingsFile(p)
+    ## Compute zero crossings
+    print("Computing zero crossings")
+    MakeZeroCrossingsFile(p)
 
-    # ## Compute Frenet-Serret
-    # print("Computing Frenet-Serret")
-    # MakeFrenetSerretDatFiles(p)
+    ## Compute Frenet-Serret
+    print("Computing Frenet-Serret")
+    MakeFrenetSerretDatFiles(p)
 
-    # ## Compute max curvature file
-    # print("Computing max curvatures")
-    # MakeMaxCurvatureFile(p)
+    ## Compute max curvature file
+    print("Computing max curvatures")
+    MakeMaxCurvatureFile(p)
 
 if __name__ == "__main__":
     main()
