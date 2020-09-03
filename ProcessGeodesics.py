@@ -156,6 +156,12 @@ def ComputeFrenetSerretTNB(t, x, y, z):
     T_y = np.gradient(y, s)
     T_z = np.gradient(z, s)
 
+    T_mag = np.sqrt(T_x**2 + T_y**2 + T_z**2)
+
+    T_x = T_x / T_mag
+    T_y = T_y / T_mag
+    T_z = T_z / T_mag
+
     dTds_x = np.gradient(T_x, s)
     dTds_y = np.gradient(T_y, s)
     dTds_z = np.gradient(T_z, s)
