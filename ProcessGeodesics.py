@@ -268,7 +268,7 @@ def main():
     print("Processing geodesics for " + p)
     ## Make geodesic dat files
     print("Making the geodesic dat files")
-    MakeGeodesicDatFiles(p, 330, 1000)
+    MakeGeodesicDatFiles(p, -1, 1000)
 
     ## Compute zero crossings
     print("Computing zero crossings")
