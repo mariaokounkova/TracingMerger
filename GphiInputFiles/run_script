@@ -1,0 +1,21 @@
+#!/bin/bash -e
+
+#CODE_HOME=~/SpEC
+#MPIRUN=$($CODE_HOME/Support/bin/GetMpiCmd -p 24)
+MPIRUN=$(GetMpiCmd -p 24)
+
+
+keep=$(pwd)
+
+mkdir -p 168.5
+cd 168.5
+cp ${keep}/ApplyObservers.input .
+#ln -s $CODE_HOME/Support/ApplyObservers/Executables/ApplyObservers SpEC
+cp /home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev2_Ringdown/Lev2_AA/Run/Hist-Func* .
+cp /home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev2_Ringdown/Lev2_AA/Run/SpatialCoordMap.input .
+#$MPIRUN ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -dir "/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev2_Ringdown/Lev2_AA/Run" -domaininput "GrDomain.input" -v ApplyObservers.input
+$MPIRUN ApplyObservers -UseTimes 168.5 -dir "/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev2_Ringdown/Lev2_AA/Run" -domaininput "GrDomain.input" -v ApplyObservers.input
+
+#-dir "/home/mokounko/Data/KerrnessStrongField/Orbital/Ev_DumpTensors/Lev2_Ringdown/Lev2_AA/Run" 
+#-v -domaininput "GrDomain.input" -UseTimes 1218.0 ApplyObservers.input
+cd ${keep}

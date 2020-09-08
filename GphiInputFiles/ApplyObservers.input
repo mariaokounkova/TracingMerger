@@ -1,0 +1,48 @@
+###
+DataBoxItems =
+  ReadFromFile(File=SpatialCoordMap.input),
+    Domain(Items =
+
+      ReadTensorsFromDiskWithMap(
+        Input=
+          psi(Dim=4;Sym=11;);
+          ##kappa(Dim=4;Sym=122;);
+        Time   = 168.5;
+        DeltaT = 1.e-8;
+        Dir    = /home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev2_Ringdown/Lev2_AA/Run;
+        DomainFile = GrDomain.input;
+        Interpolator=ParallelAdaptive(TopologicalInterpolator
+                                      =CardinalInterpolator;);
+        DomainHasNoHistoryFile = false;
+      ),
+    ),
+  Subdomain
+    (Items =
+     
+              EvaluateVectorFormula(Coords=GridToInertial::MappedCoords;
+              Output = Coordinates; V[0] = x0; V[1] = x1; V[2] = x2;),
+
+              TensorExpression(Output = g_phiphi;
+                Dim = 3; Symm =;
+                Expression = (
+                  T[] = psi[2,2]*Coordinates[2]*Coordinates[2] + 
+                        psi[3,3]*Coordinates[1]*Coordinates[1]
+                        - 2.0 * psi[2,3]*Coordinates[1]*Coordinates[2]
+                        );
+               ),
+    );
+
+Observers =
+          InterpolateToSpecifiedPoints(TopologicalInterpolator = Spectral;
+            Input = psi;
+            PointsFile = /home/mokounko/Data/HeadOnHorizon_Harmonic/ObserveGpp/Points.dat;
+            FileNameBase = g;
+            MovingToInertialMap = GridToInertial::SpatialCoordMap;
+            ),
+          InterpolateToSpecifiedPoints(TopologicalInterpolator = Spectral;
+            Input = g_phiphi;
+            PointsFile = /home/mokounko/Data/HeadOnHorizon_Harmonic/ObserveGpp/Points.dat;
+            FileNameBase = Gphiphi;
+            MovingToInertialMap = GridToInertial::SpatialCoordMap;
+            );
+        
