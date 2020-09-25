@@ -4,6 +4,7 @@ import sys
 import os
 import scipy
 from scipy import integrate
+import shutil
 
 def ReadGeodesicData(p, t_start, t_end):
     """ Read in an array of times and positions for all geodesics at once, 
@@ -129,6 +130,12 @@ def GetGeodesicsZeroCrossingsIndices(p, N):
     indices = ns[np.where(zero_crossings == N)[0]]
     return indices
 
+def GetGeodesicsZeroCrossings(p):
+    """ Return the zero crossings for each index """
+    f = p + 'ZeroCrossings.dat'
+    ns, zero_crossings = np.loadtxt(f, comments="#",usecols=([0,1]),unpack=True,dtype=int)
+    return ns, zero_crossings
+
 def ComputeArcLength(t, x, y, z):
     """ For a given trajectory {x(t), y(t), z(t)}, compute and return
         the arclength s(t) as a function of time"""
@@ -250,6 +257,28 @@ def GetFrenetSerretMaxCurvature(p, n, loc = False):
     else:
         return kappa[index], x[index], y[index], z[index]
 
+def ZeroCrossingsFilesIndices(p):
+    """ Return the ids of the geodesics that have an interesting 
+        number of zero-crossings """
+    Indices = []
+    for n in range(2, 10):
+        print("Copying geodesics with " + str(n) + " zero crossings")
+        idx = GetGeodesicsZeroCrossingsIndices(p, n)
+        print(str(len(idx)) + " such geodesics")
+        Indices = np.concatenate((Indices, idx), axis = 0)
+    Indices = Indices.astype(int)
+    print(Indices)
+    return Indices
+
+def CopyIndicesFiles(p):
+    """ Copy over the files that have a set number of zero crossings into
+    a new directory (this is useful if we want to delete the files that
+    have only one zero crossing in order to save space) """
+    Indices = ZeroCrossingsFilesIndices(p)
+    for n in Indices:
+        shutil.copy(p + '/Trajectories/' + str(n) + '.dat', p + '/Trajectories_Temp/' + str(n) + '.dat')
+        shutil.copy(p + '/FrenetSerret/' + str(n) + '.dat', p + '/FrenetSerret_Temp/' + str(n) + '.dat')
+
 def main():
 
     p = sys.argv[1]
@@ -268,19 +297,48 @@ def main():
     print("Processing geodesics for " + p)
     ## Make geodesic dat files
     print("Making the geodesic dat files")
-    MakeGeodesicDatFiles(p, -1, 1000)
+    ##MakeGeodesicDatFiles(p, -1, 1000)
 
     ## Compute zero crossings
     print("Computing zero crossings")
-    MakeZeroCrossingsFile(p)
+    ##MakeZeroCrossingsFile(p)
 
     ## Compute Frenet-Serret
     print("Computing Frenet-Serret")
-    MakeFrenetSerretDatFiles(p)
+    ##MakeFrenetSerretDatFiles(p)
 
     ## Compute max curvature file
     print("Computing max curvatures")
-    MakeMaxCurvatureFile(p)
+    ##MakeMaxCurvatureFile(p)
+
+    ## Now copy over files based on the zero crossings
+    print("Copying zero crossings files")
+
+    try:
+        os.mkdir(p + '/Trajectories_Temp')
+    except:
+        print("Trajectory directory already exists")
+    try:
+        os.mkdir(p + '/FrenetSerret_Temp')
+    except:
+        print("Trajectory directory already exists")
+    
+    CopyIndicesFiles(p)
+
+    ## Now swap the dirs with all of the trajectories with 
+    ## the directory with just the interesting trajectories
+    shutil.move(p + '/Trajectories', p + '/Trajectories_All')
+    shutil.move(p + '/Trajectories_Temp', p + '/Trajectories')
+
+    shutil.move(p + '/FrenetSerret', p + '/FrenetSerret_All')
+    shutil.move(p + '/FrenetSerret_Temp', p + '/FrenetSerret')
+
+    ## Now remove the _All directories to save space
+    shutil.rmtree(p + '/Trajectories_All')
+    shutil.rmtree(p + '/FrenetSerret_All')
+
+
+    ## Now clean up the files based on the max curvature
 
 if __name__ == "__main__":
     main()
