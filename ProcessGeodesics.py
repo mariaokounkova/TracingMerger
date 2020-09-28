@@ -80,8 +80,8 @@ def ReadGeodesicData(p, t_start, t_end):
         print('Finished writing the files')
             
     ## Go through the refinement levels and the segments
-    ##RefinementLevs = [el for el in os.listdir(p) if "Lev" in el]
-    RefinementLevs = ["Lev_AA"]
+    RefinementLevs = [el for el in os.listdir(p) if "Lev" in el]
+    ##RefinementLevs = ["Lev_AA", "Lev_AB", "Lev_AC"]
     print("RefinementLevs:", RefinementLevs)
     for lev in RefinementLevs:
 
@@ -297,19 +297,19 @@ def main():
     print("Processing geodesics for " + p)
     ## Make geodesic dat files
     print("Making the geodesic dat files")
-    ##MakeGeodesicDatFiles(p, -1, 1000)
+    MakeGeodesicDatFiles(p, -1, 1000)
 
     ## Compute zero crossings
     print("Computing zero crossings")
-    ##MakeZeroCrossingsFile(p)
+    MakeZeroCrossingsFile(p)
 
     ## Compute Frenet-Serret
     print("Computing Frenet-Serret")
-    ##MakeFrenetSerretDatFiles(p)
+    MakeFrenetSerretDatFiles(p)
 
     ## Compute max curvature file
     print("Computing max curvatures")
-    ##MakeMaxCurvatureFile(p)
+    MakeMaxCurvatureFile(p)
 
     ## Now copy over files based on the zero crossings
     print("Copying zero crossings files")
@@ -317,11 +317,11 @@ def main():
     try:
         os.mkdir(p + '/Trajectories_Temp')
     except:
-        print("Trajectory directory already exists")
+        print("Trajectories_Temp directory already exists")
     try:
         os.mkdir(p + '/FrenetSerret_Temp')
     except:
-        print("Trajectory directory already exists")
+        print("FrenetSerret_Temp directory already exists")
     
     CopyIndicesFiles(p)
 
@@ -334,8 +334,8 @@ def main():
     shutil.move(p + '/FrenetSerret_Temp', p + '/FrenetSerret')
 
     ## Now remove the _All directories to save space
-    shutil.rmtree(p + '/Trajectories_All')
-    shutil.rmtree(p + '/FrenetSerret_All')
+    #shutil.rmtree(p + '/Trajectories_All')
+    #shutil.rmtree(p + '/FrenetSerret_All')
 
 
     ## Now clean up the files based on the max curvature
