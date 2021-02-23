@@ -35,7 +35,9 @@ def ReadGeodesicData(p, t_start, t_end):
         L = [ [] for _ in range(N_geodesics)]
         T = [ [] for _ in range(N_geodesics)]
     
-        for k, t in zip(keys, times):
+        print("Going to go through the keys and the times")
+        for k, t in zip(keys, times):                      
+            print(k, t)
             if ((t > t_start) and (t < t_end)):
                 print("%.1f  " % t, end = '')
                 data = f[k]
@@ -261,7 +263,7 @@ def ZeroCrossingsFilesIndices(p):
     """ Return the ids of the geodesics that have an interesting 
         number of zero-crossings """
     Indices = []
-    for n in range(2, 10):
+    for n in range(4, 12):
         print("Copying geodesics with " + str(n) + " zero crossings")
         idx = GetGeodesicsZeroCrossingsIndices(p, n)
         print(str(len(idx)) + " such geodesics")
@@ -277,7 +279,7 @@ def CopyIndicesFiles(p):
     Indices = ZeroCrossingsFilesIndices(p)
     for n in Indices:
         shutil.copy(p + '/Trajectories/' + str(n) + '.dat', p + '/Trajectories_Temp/' + str(n) + '.dat')
-        shutil.copy(p + '/FrenetSerret/' + str(n) + '.dat', p + '/FrenetSerret_Temp/' + str(n) + '.dat')
+        #shutil.copy(p + '/FrenetSerret/' + str(n) + '.dat', p + '/FrenetSerret_Temp/' + str(n) + '.dat')
 
 def main():
 
@@ -289,27 +291,28 @@ def main():
     except:
         print("Trajectory directory already exists")
 
-    try:
-        os.mkdir(p + '/FrenetSerret')
-    except:
-        print("FrenetSerret directory already exists")
+    #try:
+    #    os.mkdir(p + '/FrenetSerret')
+    #except:
+    #    print("FrenetSerret directory already exists")
 
     print("Processing geodesics for " + p)
     ## Make geodesic dat files
     print("Making the geodesic dat files")
-    MakeGeodesicDatFiles(p, -1, 1000)
+    #MakeGeodesicDatFiles(p, -1, 1000)
+    MakeGeodesicDatFiles(p, 0, 1000)
 
     ## Compute zero crossings
     print("Computing zero crossings")
     MakeZeroCrossingsFile(p)
 
     ## Compute Frenet-Serret
-    print("Computing Frenet-Serret")
-    MakeFrenetSerretDatFiles(p)
+    #print("Computing Frenet-Serret")
+    #MakeFrenetSerretDatFiles(p)
 
     ## Compute max curvature file
-    print("Computing max curvatures")
-    MakeMaxCurvatureFile(p)
+    #print("Computing max curvatures")
+    #MakeMaxCurvatureFile(p)
 
     ## Now copy over files based on the zero crossings
     print("Copying zero crossings files")
@@ -318,10 +321,10 @@ def main():
         os.mkdir(p + '/Trajectories_Temp')
     except:
         print("Trajectories_Temp directory already exists")
-    try:
-        os.mkdir(p + '/FrenetSerret_Temp')
-    except:
-        print("FrenetSerret_Temp directory already exists")
+    #try:
+    #    os.mkdir(p + '/FrenetSerret_Temp')
+    #except:
+    #    print("FrenetSerret_Temp directory already exists")
     
     CopyIndicesFiles(p)
 
@@ -330,8 +333,8 @@ def main():
     shutil.move(p + '/Trajectories', p + '/Trajectories_All')
     shutil.move(p + '/Trajectories_Temp', p + '/Trajectories')
 
-    shutil.move(p + '/FrenetSerret', p + '/FrenetSerret_All')
-    shutil.move(p + '/FrenetSerret_Temp', p + '/FrenetSerret')
+    #shutil.move(p + '/FrenetSerret', p + '/FrenetSerret_All')
+    #shutil.move(p + '/FrenetSerret_Temp', p + '/FrenetSerret')
 
     ## Now remove the _All directories to save space
     #shutil.rmtree(p + '/Trajectories_All')
