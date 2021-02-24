@@ -299,12 +299,11 @@ def main():
     print("Processing geodesics for " + p)
     ## Make geodesic dat files
     print("Making the geodesic dat files")
-    #MakeGeodesicDatFiles(p, -1, 1000)
     MakeGeodesicDatFiles(p, 0, 1000)
 
     ## Compute zero crossings
-    print("Computing zero crossings")
-    MakeZeroCrossingsFile(p)
+    #print("Computing zero crossings")
+    #MakeZeroCrossingsFile(p)
 
     ## Compute Frenet-Serret
     #print("Computing Frenet-Serret")
@@ -315,23 +314,23 @@ def main():
     #MakeMaxCurvatureFile(p)
 
     ## Now copy over files based on the zero crossings
-    print("Copying zero crossings files")
+    #print("Copying zero crossings files")
 
-    try:
-        os.mkdir(p + '/Trajectories_Temp')
-    except:
-        print("Trajectories_Temp directory already exists")
+    #try:
+    #    os.mkdir(p + '/Trajectories_Temp')
+    #except:
+    #    print("Trajectories_Temp directory already exists")
     #try:
     #    os.mkdir(p + '/FrenetSerret_Temp')
     #except:
     #    print("FrenetSerret_Temp directory already exists")
     
-    CopyIndicesFiles(p)
+    #CopyIndicesFiles(p)
 
     ## Now swap the dirs with all of the trajectories with 
     ## the directory with just the interesting trajectories
-    shutil.move(p + '/Trajectories', p + '/Trajectories_All')
-    shutil.move(p + '/Trajectories_Temp', p + '/Trajectories')
+    #shutil.move(p + '/Trajectories', p + '/Trajectories_All')
+    #shutil.move(p + '/Trajectories_Temp', p + '/Trajectories')
 
     #shutil.move(p + '/FrenetSerret', p + '/FrenetSerret_All')
     #shutil.move(p + '/FrenetSerret_Temp', p + '/FrenetSerret')
