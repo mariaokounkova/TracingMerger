@@ -5,6 +5,8 @@ import os
 import scipy
 from scipy import integrate
 import shutil
+import itertools
+import argparse
 
 def ReadGeodesicData(p, t_start, t_end):
     """ Read in an array of times and positions for all geodesics at once, 
@@ -109,6 +111,8 @@ def GetGeodesicIndices(p):
     Indices = sorted(Indices)
     return Indices
 
+## Zero crossings computations
+
 def ComputeZeroCrossings(p, n):
     """ Compute the number of zero crossings in the y-z plane - 
         useful for head-on runs where the collision happens
@@ -124,19 +128,29 @@ def MakeZeroCrossingsFile(p):
     ns = GetGeodesicIndices(p)
     crossings = [ComputeZeroCrossings(p, n) for n in ns]
     np.savetxt(p + '/ZeroCrossings.dat', np.c_[ns, crossings], fmt = '%d %d')
-    
-def GetGeodesicsZeroCrossingsIndices(p, N):
-    """ Return the indices of the geodesics that make N zero-crossings """
-    f = p + '/ZeroCrossings.dat'
-    ns, zero_crossings = np.loadtxt(f, comments="#",usecols=([0,1]),unpack=True,dtype=int)
-    indices = ns[np.where(zero_crossings == N)[0]]
-    return indices
 
-def GetGeodesicsZeroCrossings(p):
-    """ Return the zero crossings for each index """
-    f = p + 'ZeroCrossings.dat'
-    ns, zero_crossings = np.loadtxt(f, comments="#",usecols=([0,1]),unpack=True,dtype=int)
-    return ns, zero_crossings
+## X Turns computations 
+
+def ComputeXTurns(p, n):
+    """ Compute tbe number of turns a geodesic makes along the x direction
+        Useful for head-on runs where the collision happens along the x axis"""
+    t, x, y, z, lapse = GetGeodesicTrajectory(p, n)
+    x_diff = x[1:] - x[:-1]
+    turns = len(list(itertools.groupby(x_diff, lambda x_diff: x_diff > 0)))
+    ## Set to zero turns if the trajectory does not change in x - these end up being
+    ## artifical turns hovering around zero (and unresolved)
+    if np.max(np.abs(x)) < 1e-5:
+        turns = 0
+    return turns 
+
+def MakeXTurnsFile(p):
+    """ Make a file with the format [geodesic index, number of X turns] so 
+        that we only have to compute the number of X turns once """
+    ns = GetGeodesicIndices(p)
+    turns = [ComputeXTurns(p, n) for n in ns]
+    np.savetxt(p + 'XTurns.dat', np.c_[ns, turns], fmt = '%d %d')
+
+## Frenet-Serret computations
 
 def ComputeArcLength(t, x, y, z):
     """ For a given trajectory {x(t), y(t), z(t)}, compute and return
@@ -237,110 +251,58 @@ def MakeMaxCurvatureFile(p):
     
     np.savetxt(p + '/MaxCurvatures.dat', np.c_[ns, MaxKappa, T, X, Y, Z], fmt = '%d %f %f %f %f %f')
 
-def GetFrenetSerretMaxCurvatures(p, loc = False):
-    """ Read in the post-processed max curvature for all geodesics
-        if loc == True, then also return the location"""
-    f = p + '/MaxCurvatures.dat'
-    ns, kappa, t, x, y, z = np.loadtxt(f, comments="#",usecols=([0,1,2,3,4,5]),unpack=True)
-    if loc == False:
-        return ns.astype(int), kappa
-    else:
-        return ns.astype(int), kappa, x, y, z
-    
-def GetFrenetSerretMaxCurvature(p, n, loc = False):
-    """ Read in the post-processed max curvature for the nth geodesic 
-        if loc == True, then also return the location"""
-    f = p + '/MaxCurvatures.dat'
-    ns, kappa, t, x, y, z = np.loadtxt(f, comments="#",usecols=([0,1,2,3,4,5]),unpack=True)
-    index = np.where(ns == n)[0][0]
-    print(index)
-    if loc == False:
-        return kappa[index]
-    else:
-        return kappa[index], x[index], y[index], z[index]
-
-def ZeroCrossingsFilesIndices(p):
-    """ Return the ids of the geodesics that have an interesting 
-        number of zero-crossings """
-    Indices = []
-    for n in range(4, 12):
-        print("Copying geodesics with " + str(n) + " zero crossings")
-        idx = GetGeodesicsZeroCrossingsIndices(p, n)
-        print(str(len(idx)) + " such geodesics")
-        Indices = np.concatenate((Indices, idx), axis = 0)
-    Indices = Indices.astype(int)
-    print(Indices)
-    return Indices
-
-def CopyIndicesFiles(p):
-    """ Copy over the files that have a set number of zero crossings into
-    a new directory (this is useful if we want to delete the files that
-    have only one zero crossing in order to save space) """
-    Indices = ZeroCrossingsFilesIndices(p)
-    for n in Indices:
-        shutil.copy(p + '/Trajectories/' + str(n) + '.dat', p + '/Trajectories_Temp/' + str(n) + '.dat')
-        #shutil.copy(p + '/FrenetSerret/' + str(n) + '.dat', p + '/FrenetSerret_Temp/' + str(n) + '.dat')
-
 def main():
 
-    p = sys.argv[1]
+    p = argparse.ArgumentParser(description="Post-process geodesics evolution data")
+    p.add_argument("--dir", required=True, \
+           help="Root directory of geodesic evolution data to post-process")
+    p.add_argument("--trajectories", help='Post-process the trajectories', \
+        dest='trajectories', action='store_true')
+    p.add_argument("--zerocrossings", help='Post-process the zero-crossings', \
+        dest='zerocrossings', action='store_true')
+    p.add_argument("--xturns", help='Post-process the x-turns', \
+        dest='xturns', action='store_true')
+    p.add_argument("--frenetserret", help='Perform the Frenet-Serret analysis', \
+        dest='frenetserret', action='store_true')
+    
+    p.set_defaults(trajectories=False)
+    p.set_defaults(zerocrossings=False)
+    p.set_defaults(xturns=False)
+    p.set_defaults(frenetserret=False)
+   
+    args = p.parse_args()
 
-    ## Make required directories
-    try:
-        os.mkdir(p + '/Trajectories')
-    except:
-        print("Trajectory directory already exists")
-
-    #try:
-    #    os.mkdir(p + '/FrenetSerret')
-    #except:
-    #    print("FrenetSerret directory already exists")
-
-    print("Processing geodesics for " + p)
+    print("Processing geodesics for " + args.dir)
+    
     ## Make geodesic dat files
-    print("Making the geodesic dat files")
-    MakeGeodesicDatFiles(p, 0, 1000)
+    if (args.trajectories):
+        print("Making the geodesic dat files")
+        try:
+            os.mkdir(args.dir + '/Trajectories')
+        except:
+            print("Trajectory directory already exists")
+        MakeGeodesicDatFiles(args.dir, 0, 1000)
 
     ## Compute zero crossings
-    #print("Computing zero crossings")
-    #MakeZeroCrossingsFile(p)
+    if (args.zerocrossings):
+        print("Computing zero crossings")
+        MakeZeroCrossingsFile(args.dir)
+    
+    ## Compute x turns
+    if (args.xturns):
+        print("Computing x turns")
+        MakeXTurnsFile(args.dir)
 
     ## Compute Frenet-Serret
-    #print("Computing Frenet-Serret")
-    #MakeFrenetSerretDatFiles(p)
-
-    ## Compute max curvature file
-    #print("Computing max curvatures")
-    #MakeMaxCurvatureFile(p)
-
-    ## Now copy over files based on the zero crossings
-    #print("Copying zero crossings files")
-
-    #try:
-    #    os.mkdir(p + '/Trajectories_Temp')
-    #except:
-    #    print("Trajectories_Temp directory already exists")
-    #try:
-    #    os.mkdir(p + '/FrenetSerret_Temp')
-    #except:
-    #    print("FrenetSerret_Temp directory already exists")
-    
-    #CopyIndicesFiles(p)
-
-    ## Now swap the dirs with all of the trajectories with 
-    ## the directory with just the interesting trajectories
-    #shutil.move(p + '/Trajectories', p + '/Trajectories_All')
-    #shutil.move(p + '/Trajectories_Temp', p + '/Trajectories')
-
-    #shutil.move(p + '/FrenetSerret', p + '/FrenetSerret_All')
-    #shutil.move(p + '/FrenetSerret_Temp', p + '/FrenetSerret')
-
-    ## Now remove the _All directories to save space
-    #shutil.rmtree(p + '/Trajectories_All')
-    #shutil.rmtree(p + '/FrenetSerret_All')
-
-
-    ## Now clean up the files based on the max curvature
+    if (args.frenetserret):
+        print("Computing Frenet-Serret")
+        try:
+            os.mkdir(p + '/FrenetSerret')
+        except:
+            print("FrenetSerret directory already exists")
+        MakeFrenetSerretDatFiles(p)
+        print("Computing max curvatures")
+        MakeMaxCurvatureFile(p)
 
 if __name__ == "__main__":
     main()
