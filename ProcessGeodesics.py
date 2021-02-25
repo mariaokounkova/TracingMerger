@@ -148,7 +148,7 @@ def MakeXTurnsFile(p):
         that we only have to compute the number of X turns once """
     ns = GetGeodesicIndices(p)
     turns = [ComputeXTurns(p, n) for n in ns]
-    np.savetxt(p + 'XTurns.dat', np.c_[ns, turns], fmt = '%d %d')
+    np.savetxt(p + '/XTurns.dat', np.c_[ns, turns], fmt = '%d %d')
 
 ## Frenet-Serret computations
 
