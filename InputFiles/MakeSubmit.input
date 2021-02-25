@@ -4,12 +4,14 @@
 Account = sxs
 Script = 
 	EvolveGeodesicsWrapper -a="__EmailAddresses__" -f="__TerminationInfoFile__"
+	module unload python/anaconda2-4.1.1 && module load python/anaconda3-2019.10
+	python3 /home/mokounko/TracingMerger/ProcessGeodesics.py __Directory__
 	
 Queue = 
 ForceCores = False
 CoresPerNode = 24
 Cores = 24
-Jobname = TraceHeadOn_0_0_-100
+Jobname = TraceHeadOn_0_0_100_280
 AllowUnusedCores = True
 Hours = 24.0
 Preempt = 0

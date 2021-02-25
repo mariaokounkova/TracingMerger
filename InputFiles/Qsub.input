@@ -1,2 +1,4 @@
 
 EvolveGeodesicsWrapper -a="__EmailAddresses__" -f="__TerminationInfoFile__"
+module unload python/anaconda2-4.1.1 && module load python/anaconda3-2019.10
+python3 /home/mokounko/TracingMerger/ProcessGeodesics.py __Directory__

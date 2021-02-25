@@ -8,7 +8,7 @@
 RefinementMethod = SpaceOneFrame(
   MaxSkySep = 5;
   InitialResolutionX = 200;
-  MaxIterations = 10;
+  MaxIterations = 3;
   MaxRefinementDepthPerIteration = 3;
 );
 

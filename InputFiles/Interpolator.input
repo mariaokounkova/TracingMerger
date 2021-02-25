@@ -16,17 +16,17 @@ InterpolatorDataReader =
                     /home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev2_AG/Run,
                     /home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev2_AH/Run,
                     /home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev2_Ringdown/Lev2_AA/Run;
-                    ##/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AA/Run,
-                    ##/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AB/Run,
-                    ##/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AC/Run,
-                    ##/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AD/Run,
-                    ##/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AE/Run,
-                    ##/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AF/Run,
-                    ##/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AG/Run,
-                    ##/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AH/Run,
-                    ##/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_Ringdown/Lev3_AA/Run;
+                    ###/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AA/Run,
+                    ###/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AB/Run,
+                    ###/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AC/Run,
+                    ###/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AD/Run,
+                    ###/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AE/Run,
+                    ###/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AF/Run,
+                    ###/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AG/Run,
+                    ###/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_AH/Run,
+                    ###/home/mokounko/Data/HeadOnHorizon_Harmonic/Ev/Lev3_Ringdown/Lev3_AA/Run;
     ##TimesFileName = TensorTimes.dat; 
-    TimesFileName = /home/mokounko/Data/LensingCameraTiling/TensorTimes_2.dat;
+    TimesFileName = /home/mokounko/Data/HeadOnLensing/TensorTimes_2.dat;
     AltDomainName = GrDomain.input;
     AltCoordMapName = SpatialCoordMap.input;
     TimeInterpOrder = 5;

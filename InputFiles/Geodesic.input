@@ -3,7 +3,7 @@ Output =
 (
   DiskTriggers =
         Add(
-                    DenseTrigger = EveryDeltaT(DeltaT = -1.0; Tstart = __START_TIME__);
+                    DenseTrigger = EveryDeltaT(DeltaT = -0.5; Tstart = __START_TIME__);
                                     );
                 ForceDiskTriggerOnTermination = true;
                           MemoryTriggers =;
@@ -28,7 +28,7 @@ Evolution =
         TensorName = q;
         Comparator = GreaterThan;
         ##Value = 100;
-        Value = 200;
+        Value = 650;
       );
       Terminator = DotProductTerminator
       (
@@ -55,6 +55,7 @@ Evolution =
         (
           # Use this algorithm when using dumped metric data
           ExplicitRhsAlgorithm = BohnNumericalWithLapseP0;
+          ##ExplicitRhsAlgorithm = BohnNumerical;
 
           # Use this algorithm when using analytic metrics
           #ExplicitRhsAlgorithm = BohnAnalyticWithLapseP0;

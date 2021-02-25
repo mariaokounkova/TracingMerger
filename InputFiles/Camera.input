@@ -1,13 +1,11 @@
 #Three different types of Camera: Pinhole, DistantPinhole, and ParallelRays
 #This example uses Pinhole.
 Camera = Pinhole(
-            HorizontalApertureAngle = 30; #in degrees
-            VerticalApertureAngle = 30; #in degrees
+            HorizontalApertureAngle = 15; #in degrees
+            VerticalApertureAngle = 15; #in degrees
             CameraTime = __START_TIME__;
-            CameraPosition = __CAMERA_X__, __CAMERA_Y__, __CAMERA_Z__;
+            CameraPosition = 0.0, 0., 100.0;
             CameraVelocity = 0., 0., 0.;
-            ## Pointing towards (0, 0, 0)
-            CameraDirection = __DIR_X__, __DIR_Y__, __DIR_Z__;
-            ## Don't worry about the up direction for now...
-            CameraUpDirection = 0., 0., 1.;
+            CameraDirection = 0., 0., -1.;
+            CameraUpDirection = 0., 1., 0.;
         );
