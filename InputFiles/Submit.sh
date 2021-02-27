@@ -1,5 +1,5 @@
 #!/bin/bash -
-#SBATCH -J TraceHeadOn_-43_75_50                   # Job Name
+#SBATCH -J TraceHeadOn_0_0_100_275                   # Job Name
 #SBATCH -o SpEC.stdout                # Output file name
 #SBATCH -e SpEC.stderr                # Error file name
 #SBATCH -n 24                  # Number of cores
@@ -17,3 +17,5 @@ export PATH=$(pwd -P)/bin:$PATH
 
 
 EvolveGeodesicsWrapper -a="__EmailAddresses__" -f="__TerminationInfoFile__"
+module unload python/anaconda2-4.1.1 && module load python/anaconda3-2019.10
+python3 --dir /home/mokounko/TracingMerger/ProcessGeodesics.py __Directory__ --trajectories --xturns
