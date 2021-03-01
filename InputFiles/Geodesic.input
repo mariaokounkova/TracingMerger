@@ -5,7 +5,7 @@ Output =
         Add(
                     DenseTrigger = EveryDeltaT(DeltaT = -0.5; Tstart = __START_TIME__);
                                     );
-                ForceDiskTriggerOnTermination = true;
+                ##ForceDiskTriggerOnTermination = true;
                           MemoryTriggers =;
                                     );
 
