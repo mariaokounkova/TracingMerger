@@ -8,15 +8,17 @@ import shutil
 import itertools
 import argparse
 
+
 def ReadGeodesicData(p, t_start, t_end):
     """ Read in an array of times and positions for all geodesics at once, 
         and return the trajectories indexed by geodesic """
         
-    def AppendGeodesicsTime(Lev, Run):
+    def AppendGeodesicsTime(Lev):
 
-        print("Reading Geodesic data for " + Lev + " and " + Run)
+        print("\n Reading Geodesic data for " + Lev)
 
-        file = p + '/' + Lev + '/' + Run + '/Run/Node0.h5'
+        ## Use the first segement to grab the number of geodesics 
+        file = p + '/' + Lev + '/Run_AA/Run/Node0.h5'
         f = h5py.File(file, 'r')
         ## grab the .dat files
         keys = [k for k in f.keys() if 'dat' in k]
@@ -30,6 +32,8 @@ def ReadGeodesicData(p, t_start, t_end):
         ## Minimum index
         m = int(f[keys[-1]][:,0][0])
         print("Geodesic index offset of this refinement iteration: ", m)
+
+        ## Now make the arrays 
     
         X = [ [] for _ in range(N_geodesics)]
         Y = [ [] for _ in range(N_geodesics)]
@@ -37,38 +41,55 @@ def ReadGeodesicData(p, t_start, t_end):
         L = [ [] for _ in range(N_geodesics)]
         T = [ [] for _ in range(N_geodesics)]
     
-        print("Going to go through the keys and the times")
-        for k, t in zip(keys, times):                      
-            print(k, t)
-            if ((t > t_start) and (t < t_end)):
-                print("%.1f  " % t, end = '')
-                data = f[k]
-                ## indices and positions for all geodesics at this time
-                indices = data[:,0]
-                if (len(data[0]) == 7):
-                    """ If we've run the numerical evolution so that we haven't 
-                        evolved lapse p0 -- just set lapsep0 to 1 in the files. 
-                        This field need to be in the resulting .dat file for the 
-                        paraview trajectory visualization"""
-                    x = data[:,4]
-                    y = data[:,5]
-                    z = data[:,6]
-                    l = np.ones(len(x))
-                elif (len(data[0]) == 8):
-                    """ If we have evolved lapse p0"""
-                    l = data[:,1]
-                    x = data[:,5]
-                    y = data[:,6]
-                    z = data[:,7]
-                else:
-                    print("Unrecognized number of variables")
-                ## fill in the array for each index
-                for i, j in zip(indices.astype(int), range(len(indices))):
-                    X[i-m] = np.append(X[i-m], x[j])
-                    Y[i-m] = np.append(Y[i-m], y[j])
-                    Z[i-m] = np.append(Z[i-m], z[j])
-                    L[i-m] = np.append(L[i-m], l[j])
-                    T[i-m] = np.append(T[i-m], t)
+        Segments = [el for el in os.listdir(p + '/' + lev) if "Run" in el] 
+        print(lev + " Segments:", Segments)
+
+        for segment in Segments:
+                
+            print("\n Working on segment " + segment)
+
+            file = p + '/' + Lev + '/' + segment + '/Run/Node0.h5'
+            f = h5py.File(file, 'r')
+            ## grab the .dat files
+            keys = [k for k in f.keys() if 'dat' in k]
+            ## Array of times from the .dat files
+            times = [float(k.split('.dat')[0]) for k in keys]
+            ## sort keys according to times
+            times, keys = zip(*sorted(zip(times, keys)))
+            print(len(times), times[0], times[-1])
+
+            print("Going to go through the keys and the times")
+            for k, t in zip(keys, times): 
+                ## Currently set to print every 0.5
+                if ((t > t_start) and (t < t_end) and (t % 0.5 == 0.0)):
+                    print("%.1f  " % t, end = '')
+                    data = f[k]
+                    ## indices and positions for all geodesics at this time
+                    indices = data[:,0]
+                    if (len(data[0]) == 7):
+                        """ If we've run the numerical evolution so that we haven't 
+                            evolved lapse p0 -- just set lapsep0 to 1 in the files. 
+                            This field need to be in the resulting .dat file for the 
+                            paraview trajectory visualization"""
+                        x = data[:,4]
+                        y = data[:,5]
+                        z = data[:,6]
+                        l = np.ones(len(x))
+                    elif (len(data[0]) == 8):
+                        """ If we have evolved lapse p0"""
+                        l = data[:,1]
+                        x = data[:,5]
+                        y = data[:,6]
+                        z = data[:,7]
+                    else:
+                        print("Unrecognized number of variables")
+                    ## fill in the array for each index
+                    for i, j in zip(indices.astype(int), range(len(indices))):
+                        X[i-m] = np.append(X[i-m], x[j])
+                        Y[i-m] = np.append(Y[i-m], y[j])
+                        Z[i-m] = np.append(Z[i-m], z[j])
+                        L[i-m] = np.append(L[i-m], l[j])
+                        T[i-m] = np.append(T[i-m], t)
 
         print("\n")
         ## Once we have the arrays constructed, append them to the file
@@ -85,14 +106,10 @@ def ReadGeodesicData(p, t_start, t_end):
             
     ## Go through the refinement levels and the segments
     RefinementLevs = [el for el in os.listdir(p) if "Lev" in el]
-    ##RefinementLevs = ["Lev_AA", "Lev_AB", "Lev_AC"]
     print("RefinementLevs:", RefinementLevs)
     for lev in RefinementLevs:
 
-        Segments = [el for el in os.listdir(p + '/' + lev) if "Run" in el] 
-        print(lev + " Segments:", Segments)
-        for segment in Segments:
-            AppendGeodesicsTime(lev, segment)
+        AppendGeodesicsTime(lev)
 
 def MakeGeodesicDatFiles(p, t_start, t_end):
     """ Print the result of ReadGeodesicData to files """
