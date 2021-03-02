@@ -41,7 +41,7 @@ def ReadGeodesicData(p, t_start, t_end):
         L = [ [] for _ in range(N_geodesics)]
         T = [ [] for _ in range(N_geodesics)]
     
-        Segments = [el for el in os.listdir(p + '/' + lev) if "Run" in el] 
+        Segments = [el for el in os.listdir(p + '/' + lev) if "Run" in el][::-1]
         print(lev + " Segments:", Segments)
 
         for segment in Segments:
@@ -136,6 +136,7 @@ def ComputeZeroCrossings(p, n):
         useful for head-on runs where the collision happens
         along the x axis """
     t, x, y, z, lapse = GetGeodesicTrajectory(p, n)
+    t, x, y, z = zip(*sorted(zip(t, x, y, z)))
     theta = np.arctan2(z, y)
     zero_crossings = len(np.where(np.diff(np.sign(theta)))[0])
     return zero_crossings
@@ -153,6 +154,7 @@ def ComputeXTurns(p, n):
     """ Compute tbe number of turns a geodesic makes along the x direction
         Useful for head-on runs where the collision happens along the x axis"""
     t, x, y, z, lapse = GetGeodesicTrajectory(p, n)
+    t, x, y, z = zip(*sorted(zip(t, x, y, z)))
     x_diff = x[1:] - x[:-1]
     turns = len(list(itertools.groupby(x_diff, lambda x_diff: x_diff > 0)))
     ## Set to zero turns if the trajectory does not change in x - these end up being
@@ -227,6 +229,7 @@ def MakeFrenetSerretDatFiles(p):
     ns = GetGeodesicIndices(p)
     for n in ns: 
         t, x, y, z, lapse = GetGeodesicTrajectory(p, n)
+        t, x, y, z = zip(*sorted(zip(t, x, y, z)))
         T_x, T_y, T_z, N_x, N_y, N_z, B_x, B_y, B_z, kappa = ComputeFrenetSerretTNB(t, x, y, z)
         np.savetxt(p + '/FrenetSerret/' + str(n) + '.dat', np.c_[t, kappa, T_x, T_y, T_z, \
                                                                         N_x, N_y, N_z, \
