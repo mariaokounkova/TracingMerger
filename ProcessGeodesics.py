@@ -61,6 +61,7 @@ def ReadGeodesicData(p, t_start, t_end):
             print("Going to go through the keys and the times")
             for k, t in zip(keys, times): 
                 ## Currently set to print every 0.5
+                print(k, t)
                 if ((t > t_start) and (t < t_end) and (t % 0.5 == 0.0)):
                     print("%.1f  " % t, end = '')
                     data = f[k]
