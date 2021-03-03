@@ -13,9 +13,6 @@ $ThreadsPerNode = 24;
 #Choose something else to use your own submission file.
 $SubmissionScript="MakeSubmit.input";
 
-#When do you want the geodesics to start evolving?
-##$StartTime = 219.7 ;
-
 #Geodesics SHOULD be terminated by the distance check or the redshift check,
 # to see if it comes from infinity or the black hole, respectively.
 #This time is used to stop the evolution for geodesices for which we were
@@ -31,11 +28,17 @@ $SubmissionScript="MakeSubmit.input";
 
 ######### DON'T NEED TO CHANGE ANYTHING AFTER HERE ####################
 
-foreach (280) {
+$CameraX = 0.0;
+$CameraY = 0.0;
+$CameraZ = 157.0;
+$Angle = 9.586;
+
+foreach (322.4, 327.4, 332.4) {
 
 my $StartTime = $_;
-my $EndTime = 279;
-$RunName="TraceHeadOn_0_0_100_".$StartTime;
+my $EndTime = 0;
+
+$RunName="TraceHeadOn_".int($CameraX)."_".int($CameraY)."_".int($CameraZ)."_".$StartTime;
 
 my $TotalNumProcs = int($ThreadsPerNode * $NodesForRun);
 CreateSubmitScript(
@@ -69,7 +72,14 @@ RunInDirectory($RunDirectory,
 {
 "Camera.input" =>
   {
-    "__START_TIME__"=>$StartTime
+    "__START_TIME__"=>$StartTime,
+    "__ANGLE__"=>$Angle,
+    "__CAMERA_X__"=>$CameraX,
+    "__CAMERA_Y__"=>$CameraY,
+    "__CAMERA_Z__"=>$CameraZ,
+    "__DIR_X__"=>-$CameraX,
+    "__DIR_Y__"=>-$CameraY,
+    "__DIR_Z__"=>-$CameraZ,
   },
 "Evolution.input" =>
   {
