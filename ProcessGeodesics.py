@@ -61,8 +61,8 @@ def ReadGeodesicData(p, t_start, t_end):
             print("Going to go through the keys and the times")
             for k, t in zip(keys, times): 
                 ## Currently set to print every 0.5
-                print(k, t)
-                if ((t > t_start) and (t < t_end) and (t % 0.5 == 0.0)):
+                ## print(k, t)
+                if ((t > t_start) and (t < t_end)): # and (t % 0.5 == 0.0)):
                     print("%.1f  " % t, end = '')
                     data = f[k]
                     ## indices and positions for all geodesics at this time
@@ -155,6 +155,7 @@ def ComputeXTurns(p, n):
         Useful for head-on runs where the collision happens along the x axis"""
     t, x, y, z, lapse = GetGeodesicTrajectory(p, n)
     t, x, y, z = zip(*sorted(zip(t, x, y, z)))
+    x = np.array(x)
     x_diff = x[1:] - x[:-1]
     turns = len(list(itertools.groupby(x_diff, lambda x_diff: x_diff > 0)))
     ## Set to zero turns if the trajectory does not change in x - these end up being
