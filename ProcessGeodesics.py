@@ -15,7 +15,7 @@ def GetCameraData(p):
     """ Get data about geodesic positions and fates
         in the plane of the camera """
     
-    file = p + 'RefinementMethodData.h5'
+    file = p + '/RefinementMethodData.h5'
     f = h5py.File(file, 'r')
     data = f['LensingCore.dat']
     
@@ -48,7 +48,7 @@ def GetInfinityGeodesics(p):
     ahb = np.where(surface == 3.)[0]
     ahc = np.where(surface == 4.)[0]
     """
-    file = p + 'RefinementMethodData.h5'
+    file = p + '/RefinementMethodData.h5'
     f = h5py.File(file, 'r')
     data = f['LensingCore.dat']
     surface = data[:,4]
@@ -123,7 +123,7 @@ def ReadGeodesicData(p, t_start, t_end):
                 if ((t > t_start) and (t < t_end)):
                     ## Check that time is printed at the correct interval
                     if ((t % 0.1 == 0.0) or (abs(t % 0.1 - 0.09999999999999) < 1e-9)):
-                        print("%.1f  " % t, end = '')
+                        print("%.1f  " % t, end = '', flush=True)
                         data = f[k]
                         ## indices and positions for all geodesics at this time
                         indices = data[:,0]
@@ -159,7 +159,7 @@ def ReadGeodesicData(p, t_start, t_end):
         hf = h5py.File(p + '/Trajectories.h5', 'a')
         print(p)
         
-        for a in range(10): #range(len(T)):
+        for a in range(len(T)):
             if (len(T[a]) > 1): 
                 my_data = np.c_[T[a],X[a],Y[a],Z[a],L[a]]
                 ## Remember to add in the minimum index since the starting 
@@ -288,11 +288,10 @@ def ComputeXTurns(p, n):
     print(n, end=' ')
     t, x, y, z = GetGeodesicTrajectory(p, n)
     x_diff = x[1:] - x[:-1]
-    print(x_diff, len(x))
     turns = len(list(itertools.groupby(x_diff, lambda x_diff: x_diff > 0)))
     ## Set to zero turns if the trajectory does not change in x - these end up being
     ## artifical turns hovering around zero (and unresolved)
-    if np.max(np.abs(x)) < 1e-5:
+    if np.max(np.abs(x)) < 1e-3:
         turns = 0
     return turns 
 
@@ -469,12 +468,13 @@ def main():
     
     ## Make geodesic dat files
     if (args.trajectories):
-        print("Making the geodesic dat files")
+        print("Making the geodesic trajectory file")
         try:
-            os.mkdir(args.dir + '/Trajectories')
+            os.remove(args.dir + '/Trajectories.h5')
+            print("Removed previous Trajectories.h5 file")
         except:
-            print("Trajectory directory already exists")
-        MakeGeodesicDatFiles(args.dir, 100, 120)
+            print("Trajectories.h5 file did not previous exist")
+        MakeGeodesicDatFiles(args.dir, 0, 1000)
 
     ## Compute zero crossings
     if (args.zerocrossings):
