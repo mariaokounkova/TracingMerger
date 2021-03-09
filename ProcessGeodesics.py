@@ -197,7 +197,6 @@ def GetGeodesicTrajectory(p, n):
     """ Read in the post-processed trajectory for the nth geodesic """
     f = p + '/Trajectories.h5'
     hf = h5py.File(f, 'r')
-    print(hf.keys())
     data = hf['Geodesic' + str(n) + '.dat']
     t = data[:,0]
     x = data[:,1]
@@ -220,8 +219,7 @@ def GetGeodesicIndices(p, infinity=True):
     Files = os.listdir(p + '/Trajectories')
     f = p + '/Trajectories.h5'
     hf = h5py.File(f, 'r')
-    print(hf.keys())
-    Indices = [int(file.split('.dat')[0]) for file in Files]
+    Indices = [int(k.split('Geodesic')[1].split('.dat')[0]) for k in hf.keys()]
     Indices = sorted(Indices)
     if infinity:
         indices_infinity = GetInfinityGeodesics(p)
@@ -333,7 +331,7 @@ def GetGeodesicsXTurnsIndicesGreater(p, N, infinity=True, N_less = 1e6):
         indices_infinity = GetInfinityGeodesics(p)
         indices = list(set(indices_infinity) & set(indices))
     return indices
-
+    
 def GetGeodesicsMaxXTurns(p, infinity=True):
     """ Return the maximum number N of zero crossings for a given run, 
         along with the indices of the geodesics that make N zero-crossings 
@@ -476,7 +474,7 @@ def main():
             os.mkdir(args.dir + '/Trajectories')
         except:
             print("Trajectory directory already exists")
-        MakeGeodesicDatFiles(args.dir, 247, 250)
+        MakeGeodesicDatFiles(args.dir, 100, 120)
 
     ## Compute zero crossings
     if (args.zerocrossings):
