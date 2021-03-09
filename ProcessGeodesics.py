@@ -9,6 +9,66 @@ import itertools
 import argparse
 
 
+## Camera geodesic evaluations
+
+def GetCameraData(p):
+    """ Get data about geodesic positions and fates
+        in the plane of the camera """
+    
+    file = p + 'RefinementMethodData.h5'
+    f = h5py.File(file, 'r')
+    data = f['LensingCore.dat']
+    
+    tags = data[:,0]
+    tags = tags.astype(int)
+    x_pos = data[:,1]
+    y_pos = data[:,2]
+    surface = data[:,4]
+    
+    return tags, x_pos, y_pos, surface
+
+def GrabSurfaceIndices(surface, fate):
+    
+    i = np.where(surface == fate)[0]
+    return i
+
+def SelectCameraGeodesics(p, fate):
+    
+    tags, x_pos, y_pos, surface = GetCameraData(p)
+    
+    i = np.where(surface == fate)[0]
+    
+    return tags[i], x_pos[i], y_pos[i], surface[i]
+    
+def GetInfinityGeodesics(p):
+    """ 
+    inf = np.where(surface == 1.)[0]
+    infty = np.where(surface == 7.)[0]
+    aha = np.where(surface == 2.)[0]
+    ahb = np.where(surface == 3.)[0]
+    ahc = np.where(surface == 4.)[0]
+    """
+    file = p + 'RefinementMethodData.h5'
+    f = h5py.File(file, 'r')
+    data = f['LensingCore.dat']
+    surface = data[:,4]
+    return GrabSurfaceIndices(surface, 7)
+
+def GetCameraPosition(p):
+    p = p.split('Trace')[1]
+    x = p.split('_')[1]
+    y = p.split('_')[2]
+    z = p.split('_')[3]
+    return '[' + x + ',' + y + ',' + z + ']'
+
+def GetTime(p):
+    p = p.split('Trace')[1]
+    t = p.split('_')[4]
+    t = t.split('/')[0]
+    return t
+
+## Geodesic data processing
+
 def ReadGeodesicData(p, t_start, t_end):
     """ Read in an array of times and positions for all geodesics at once, 
         and return the trajectories indexed by geodesic """
@@ -96,10 +156,10 @@ def ReadGeodesicData(p, t_start, t_end):
         ## Once we have the arrays constructed, append them to the file
         print('Read the geodesic data, now writing the files')
         
-        hf = h5py.File(p + '/Trajectories.h5', 'w')
+        hf = h5py.File(p + '/Trajectories.h5', 'a')
         print(p)
         
-        for a in range(len(T)):
+        for a in range(10): #range(len(T)):
             if (len(T[a]) > 1): 
                 my_data = np.c_[T[a],X[a],Y[a],Z[a],L[a]]
                 ## Remember to add in the minimum index since the starting 
@@ -124,7 +184,6 @@ def ReadGeodesicData(p, t_start, t_end):
             
     ## Go through the refinement levels and the segments
     RefinementLevs = [el for el in os.listdir(p) if "Lev" in el]
-    RefinementLevs = ['Lev_AA'] ## Masha
     print("RefinementLevs:", RefinementLevs)
     for lev in RefinementLevs:
 
@@ -133,18 +192,40 @@ def ReadGeodesicData(p, t_start, t_end):
 def MakeGeodesicDatFiles(p, t_start, t_end):
     """ Print the result of ReadGeodesicData to files """
     ReadGeodesicData(p, t_start, t_end)
-
+    
 def GetGeodesicTrajectory(p, n):
-  """ Read in the post-processed trajectory for the nth geodesic """
-  f = p + '/Trajectories/' + str(n) + '.dat'
-  t, x, y, z, lapse = np.loadtxt(f, comments="#",usecols=([0,1,2,3,4]),unpack=True)
-  return t, x, y, z, lapse
+    """ Read in the post-processed trajectory for the nth geodesic """
+    f = p + '/Trajectories.h5'
+    hf = h5py.File(f, 'r')
+    print(hf.keys())
+    data = hf['Geodesic' + str(n) + '.dat']
+    t = data[:,0]
+    x = data[:,1]
+    y = data[:,2]
+    z = data[:,3]
+    hf.close()
+    ## Make sure the times are sorted
+    t, x, y, z = zip(*sorted(zip(t, x, y, z)))
+    t = np.array(t)
+    x = np.array(x)
+    y = np.array(y)
+    z = np.array(z)
+    # Former method of reading in 
+    #t, x, y, z, lapse = np.loadtxt(f, comments="#",usecols=([0,1,2,3,4]),unpack=True)
+    return t, x, y, z
 
-def GetGeodesicIndices(p):
-    """ Return the indices of all of the geodesics we have printed to file """
+def GetGeodesicIndices(p, infinity=True):
+    """ Return the indices of all of the geodesics we have printed to file 
+        If infinity == True, only returnt the geodesics that make it out to infinity """
     Files = os.listdir(p + '/Trajectories')
+    f = p + '/Trajectories.h5'
+    hf = h5py.File(f, 'r')
+    print(hf.keys())
     Indices = [int(file.split('.dat')[0]) for file in Files]
     Indices = sorted(Indices)
+    if infinity:
+        indices_infinity = GetInfinityGeodesics(p)
+        Indices = list(set(indices_infinity) & set(Indices))
     return Indices
 
 ## Zero crossings computations
@@ -153,8 +234,7 @@ def ComputeZeroCrossings(p, n):
     """ Compute the number of zero crossings in the y-z plane - 
         useful for head-on runs where the collision happens
         along the x axis """
-    t, x, y, z, lapse = GetGeodesicTrajectory(p, n)
-    t, x, y, z = zip(*sorted(zip(t, x, y, z)))
+    t, x, y, z = GetGeodesicTrajectory(p, n)
     theta = np.arctan2(z, y)
     zero_crossings = len(np.where(np.diff(np.sign(theta)))[0])
     return zero_crossings
@@ -164,17 +244,53 @@ def MakeZeroCrossingsFile(p):
         that we only have to compute the number of zero crossings once """
     ns = GetGeodesicIndices(p)
     crossings = [ComputeZeroCrossings(p, n) for n in ns]
-    np.savetxt(p + '/ZeroCrossings.dat', np.c_[ns, crossings], fmt = '%d %d')
+    np.savetxt(p + 'ZeroCrossings.dat', np.c_[ns, crossings], fmt = '%d %d')
+    
+def GetGeodesicsZeroCrossings(p):
+    """ Return the zero crossings for each index """
+    f = p + 'ZeroCrossings.dat'
+    ns, zero_crossings = np.loadtxt(f, comments="#",usecols=([0,1]),unpack=True,dtype=int)
+    return ns, zero_crossings
+
+def GetGeodesicsZeroCrossingsIndices(p, N, infinity=True):
+    """ Return the indices of the geodesics that make N zero-crossings 
+        If infinity == True, return only the ones that make it to infinity"""
+    ns, zero_crossings = GetGeodesicsZeroCrossings(p)
+    indices = ns[np.where(zero_crossings == N)[0]]
+    if infinity:
+        indices_infinity = GetInfinityGeodesics(p)
+        indices = list(set(indices_infinity) & set(indices))
+    return indices
+
+def GetGeodesicsZeroCrossingsIndicesGreater(p, N, infinity=True):
+    """ Return the indices of the geodesics that make N or more zero-crossings 
+        If infinity == True, return only the ones that make it to infinity"""
+    ns, zero_crossings = GetGeodesicsZeroCrossings(p)
+    indices = ns[np.where((zero_crossings >= N))[0]]
+    if infinity:
+        indices_infinity = GetInfinityGeodesics(p)
+        indices = list(set(indices_infinity) & set(indices))
+    return indices
+
+def GetGeodesicsMaxZeroCrossings(p, infinity=True):
+    """ Return the maximum number N of zero crossings for a given run, 
+        along with the indices of the geodesics that make N zero-crossings 
+        If infinity == Ture, only return the ones that make it to infinity"""
+    ns, zero_crossings = GetGeodesicsZeroCrossings(p)
+    max_N = max(zero_crossings)
+    indices = GetGeodesicsZeroCrossingsIndices(p, max_N, infinity=infinity)
+    return max_N, indices
+
 
 ## X Turns computations 
 
 def ComputeXTurns(p, n):
     """ Compute tbe number of turns a geodesic makes along the x direction
         Useful for head-on runs where the collision happens along the x axis"""
-    t, x, y, z, lapse = GetGeodesicTrajectory(p, n)
-    t, x, y, z = zip(*sorted(zip(t, x, y, z)))
-    x = np.array(x)
+    print(n, end=' ')
+    t, x, y, z = GetGeodesicTrajectory(p, n)
     x_diff = x[1:] - x[:-1]
+    print(x_diff, len(x))
     turns = len(list(itertools.groupby(x_diff, lambda x_diff: x_diff > 0)))
     ## Set to zero turns if the trajectory does not change in x - these end up being
     ## artifical turns hovering around zero (and unresolved)
@@ -186,8 +302,47 @@ def MakeXTurnsFile(p):
     """ Make a file with the format [geodesic index, number of X turns] so 
         that we only have to compute the number of X turns once """
     ns = GetGeodesicIndices(p)
+    print('TOTAL NUMBER: ', str(len(ns)))
     turns = [ComputeXTurns(p, n) for n in ns]
-    np.savetxt(p + '/XTurns.dat', np.c_[ns, turns], fmt = '%d %d')
+    np.savetxt(p + 'XTurns.dat', np.c_[ns, turns], fmt = '%d %d')
+    
+def GetGeodesicsXTurns(p):
+    """ Return the x turns for each index """
+    f = p + 'XTurns.dat'
+    ns, turns = np.loadtxt(f, comments="#",usecols=([0,1]),unpack=True,dtype=int)
+    return ns, turns
+
+def GetGeodesicsXTurnsIndices(p, N, infinity=True):
+    """ Return the indices of the geodesics that make N x turns 
+        If infinity == True, return only the ones that make it to infinity"""
+    ns, turns = GetGeodesicsXTurns(p)
+    indices = ns[np.where(turns == N)[0]]
+    if infinity:
+        indices_infinity = GetInfinityGeodesics(p)
+        indices = list(set(indices_infinity) & set(indices))
+    return indices
+
+def GetGeodesicsXTurnsIndicesGreater(p, N, infinity=True, N_less = 1e6):
+    """ Return the indices of the geodesics that make N or more x turns 
+        If infinity == True, return only the ones that make it to infinity"""
+    ns, turns = GetGeodesicsXTurns(p)
+    indices = ns[np.where(turns >= N)[0]]
+    indices_less = ns[np.where(turns <= N_less)[0]]
+    indices = list(set(indices) & set(indices_less))
+    if infinity:
+        indices_infinity = GetInfinityGeodesics(p)
+        indices = list(set(indices_infinity) & set(indices))
+    return indices
+
+def GetGeodesicsMaxXTurns(p, infinity=True):
+    """ Return the maximum number N of zero crossings for a given run, 
+        along with the indices of the geodesics that make N zero-crossings 
+        If infinity == Ture, only return the ones that make it to infinity"""
+    f = p + 'ZeroCrossings.dat'
+    ns, turns = GetGeodesicsXTurns(p)
+    max_N = max(turns)
+    indices = GetGeodesicsXTurnsIndices(p, max_N, infinity=infinity)
+    return max_N, indices
 
 ## Frenet-Serret computations
 
@@ -247,7 +402,7 @@ def MakeFrenetSerretDatFiles(p):
         data (so we only have to compute it once)"""
     ns = GetGeodesicIndices(p)
     for n in ns: 
-        t, x, y, z, lapse = GetGeodesicTrajectory(p, n)
+        t, x, y, z = GetGeodesicTrajectory(p, n)
         t, x, y, z = zip(*sorted(zip(t, x, y, z)))
         T_x, T_y, T_z, N_x, N_y, N_z, B_x, B_y, B_z, kappa = ComputeFrenetSerretTNB(t, x, y, z)
         np.savetxt(p + '/FrenetSerret/' + str(n) + '.dat', np.c_[t, kappa, T_x, T_y, T_z, \
@@ -280,7 +435,7 @@ def MakeMaxCurvatureFile(p):
     
     for i in range(N):
         n = ns[i]
-        t, x, y, z, lapse = GetGeodesicTrajectory(p, n)
+        t, x, y, z = GetGeodesicTrajectory(p, n)
         time, kappa = GetFrenetSerretCurvature(p, n)
         index = np.argmax(kappa)
         MaxKappa[i] = kappa[index]
@@ -321,7 +476,7 @@ def main():
             os.mkdir(args.dir + '/Trajectories')
         except:
             print("Trajectory directory already exists")
-        MakeGeodesicDatFiles(args.dir, 250, 260)
+        MakeGeodesicDatFiles(args.dir, 247, 250)
 
     ## Compute zero crossings
     if (args.zerocrossings):
