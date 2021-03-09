@@ -56,57 +56,75 @@ def ReadGeodesicData(p, t_start, t_end):
             times = [float(k.split('.dat')[0]) for k in keys]
             ## sort keys according to times
             times, keys = zip(*sorted(zip(times, keys)))
-            print(len(times), times[0], times[-1])
 
             print("Going to go through the keys and the times")
             for k, t in zip(keys, times): 
-                ## Currently set to print every 0.5
-                ## print(k, t)
-                if ((t > t_start) and (t < t_end)): # and (t % 0.5 == 0.0)):
-                    print("%.1f  " % t, end = '')
-                    data = f[k]
-                    ## indices and positions for all geodesics at this time
-                    indices = data[:,0]
-                    if (len(data[0]) == 7):
-                        """ If we've run the numerical evolution so that we haven't 
-                            evolved lapse p0 -- just set lapsep0 to 1 in the files. 
-                            This field need to be in the resulting .dat file for the 
-                            paraview trajectory visualization"""
-                        x = data[:,4]
-                        y = data[:,5]
-                        z = data[:,6]
-                        l = np.ones(len(x))
-                    elif (len(data[0]) == 8):
-                        """ If we have evolved lapse p0"""
-                        l = data[:,1]
-                        x = data[:,5]
-                        y = data[:,6]
-                        z = data[:,7]
-                    else:
-                        print("Unrecognized number of variables")
-                    ## fill in the array for each index
-                    for i, j in zip(indices.astype(int), range(len(indices))):
-                        X[i-m] = np.append(X[i-m], x[j])
-                        Y[i-m] = np.append(Y[i-m], y[j])
-                        Z[i-m] = np.append(Z[i-m], z[j])
-                        L[i-m] = np.append(L[i-m], l[j])
-                        T[i-m] = np.append(T[i-m], t)
+                ## Check that time is within the bounds
+                if ((t > t_start) and (t < t_end)):
+                    ## Check that time is printed at the correct interval
+                    if ((t % 0.1 == 0.0) or (abs(t % 0.1 - 0.09999999999999) < 1e-9)):
+                        print("%.1f  " % t, end = '')
+                        data = f[k]
+                        ## indices and positions for all geodesics at this time
+                        indices = data[:,0]
+                        if (len(data[0]) == 7):
+                            """ If we've run the numerical evolution so that we haven't 
+                                evolved lapse p0 -- just set lapsep0 to 1 in the files. 
+                                This field need to be in the resulting .dat file for the 
+                                paraview trajectory visualization"""
+                            x = data[:,4]
+                            y = data[:,5]
+                            z = data[:,6]
+                            l = np.ones(len(x))
+                        elif (len(data[0]) == 8):
+                            """ If we have evolved lapse p0"""
+                            l = data[:,1]
+                            x = data[:,5]
+                            y = data[:,6]
+                            z = data[:,7]
+                        else:
+                            print("Unrecognized number of variables")
+                        ## fill in the array for each index
+                        for i, j in zip(indices.astype(int), range(len(indices))):
+                            X[i-m] = np.append(X[i-m], x[j])
+                            Y[i-m] = np.append(Y[i-m], y[j])
+                            Z[i-m] = np.append(Z[i-m], z[j])
+                            L[i-m] = np.append(L[i-m], l[j])
+                            T[i-m] = np.append(T[i-m], t)
 
         print("\n")
         ## Once we have the arrays constructed, append them to the file
         print('Read the geodesic data, now writing the files')
+        
+        hf = h5py.File(p + '/Trajectories.h5', 'w')
+        print(p)
+        
         for a in range(len(T)):
-            if (len(T[a]) > 1):
+            if (len(T[a]) > 1): 
+                my_data = np.c_[T[a],X[a],Y[a],Z[a],L[a]]
                 ## Remember to add in the minimum index since the starting 
                 ## geodesic index just gets incremented during reach refinement
                 ## level (by the number of geodesics that came from the levels before)
-                ff = open(p + '/Trajectories/' + str(a + m) + '.dat','ab')
-                np.savetxt(ff, np.c_[T[a][2:],X[a][2:],Y[a][2:],Z[a][2:],L[a][2:]])
-                ff.close()
+                ## Hence a + m 
+                hf.create_dataset('Geodesic' + str(a+m) + '.dat', data=my_data)
+                
+        hf.close()
+        
+        ## Previous code for writing .dat files
+        #for a in range(len(T)):
+        #    if (len(T[a]) > 1):
+        #        ## Remember to add in the minimum index since the starting 
+        #        ## geodesic index just gets incremented during reach refinement
+        #        ## level (by the number of geodesics that came from the levels before)
+        #        ff = open(p + '/Trajectories/' + str(a + m) + '.dat','ab')
+        #        np.savetxt(ff, np.c_[T[a][2:],X[a][2:],Y[a][2:],Z[a][2:],L[a][2:]])
+        #        ff.close()
+        
         print('Finished writing the files')
             
     ## Go through the refinement levels and the segments
     RefinementLevs = [el for el in os.listdir(p) if "Lev" in el]
+    RefinementLevs = ['Lev_AA'] ## Masha
     print("RefinementLevs:", RefinementLevs)
     for lev in RefinementLevs:
 
@@ -303,7 +321,7 @@ def main():
             os.mkdir(args.dir + '/Trajectories')
         except:
             print("Trajectory directory already exists")
-        MakeGeodesicDatFiles(args.dir, 0, 1000)
+        MakeGeodesicDatFiles(args.dir, 250, 260)
 
     ## Compute zero crossings
     if (args.zerocrossings):
