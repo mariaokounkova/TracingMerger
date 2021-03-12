@@ -90,7 +90,8 @@ def ReadGeodesicData(p, t_start, t_end):
         N_geodesics = len(f[keys[-1]][:,0])
         print("Total geodesics: ", N_geodesics, "Time steps: ", len(times))
         ## Minimum index
-        m = int(f[keys[-1]][:,0][0])
+        ## print(sorted(f[keys[-1]][:,0])[0])
+        m = int(sorted(f[keys[-1]][:,0])[0])
         print("Geodesic index offset of this refinement iteration: ", m)
 
         ## Now make the arrays 
@@ -216,7 +217,6 @@ def GetGeodesicTrajectory(p, n):
 def GetGeodesicIndices(p, infinity=True):
     """ Return the indices of all of the geodesics we have printed to file 
         If infinity == True, only returnt the geodesics that make it out to infinity """
-    Files = os.listdir(p + '/Trajectories')
     f = p + '/Trajectories.h5'
     hf = h5py.File(f, 'r')
     Indices = [int(k.split('Geodesic')[1].split('.dat')[0]) for k in hf.keys()]
@@ -301,7 +301,8 @@ def MakeXTurnsFile(p):
     ns = GetGeodesicIndices(p)
     print('TOTAL NUMBER: ', str(len(ns)))
     turns = [ComputeXTurns(p, n) for n in ns]
-    np.savetxt(p + 'XTurns.dat', np.c_[ns, turns], fmt = '%d %d')
+    np.savetxt(p + '/XTurns.dat', np.c_[ns, turns], fmt = '%d %d')
+    print('Wrote the file') 
     
 def GetGeodesicsXTurns(p):
     """ Return the x turns for each index """
@@ -473,8 +474,8 @@ def main():
             os.remove(args.dir + '/Trajectories.h5')
             print("Removed previous Trajectories.h5 file")
         except:
-            print("Trajectories.h5 file did not previous exist")
-        MakeGeodesicDatFiles(args.dir, 0, 1000)
+            print("Trajectories.h5 file did not previously exist")
+        MakeGeodesicDatFiles(args.dir, 97, 100)
 
     ## Compute zero crossings
     if (args.zerocrossings):
