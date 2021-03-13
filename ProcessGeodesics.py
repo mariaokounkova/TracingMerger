@@ -90,7 +90,6 @@ def ReadGeodesicData(p, t_start, t_end):
         N_geodesics = len(f[keys[-1]][:,0])
         print("Total geodesics: ", N_geodesics, "Time steps: ", len(times))
         ## Minimum index
-        ## print(sorted(f[keys[-1]][:,0])[0])
         m = int(sorted(f[keys[-1]][:,0])[0])
         print("Geodesic index offset of this refinement iteration: ", m)
 
@@ -171,16 +170,6 @@ def ReadGeodesicData(p, t_start, t_end):
                 
         hf.close()
         
-        ## Previous code for writing .dat files
-        #for a in range(len(T)):
-        #    if (len(T[a]) > 1):
-        #        ## Remember to add in the minimum index since the starting 
-        #        ## geodesic index just gets incremented during reach refinement
-        #        ## level (by the number of geodesics that came from the levels before)
-        #        ff = open(p + '/Trajectories/' + str(a + m) + '.dat','ab')
-        #        np.savetxt(ff, np.c_[T[a][2:],X[a][2:],Y[a][2:],Z[a][2:],L[a][2:]])
-        #        ff.close()
-        
         print('Finished writing the files')
             
     ## Go through the refinement levels and the segments
@@ -213,6 +202,17 @@ def GetGeodesicTrajectory(p, n):
     # Former method of reading in 
     #t, x, y, z, lapse = np.loadtxt(f, comments="#",usecols=([0,1,2,3,4]),unpack=True)
     return t, x, y, z
+
+def WriteGeodesicTrajectoryDatFile(p, n):
+    """ Print the post-processed trajectory for the nth geodesic 
+        to a .dat file """
+    
+    t, x, y, z = GetGeodesicTrajectory(p, n)
+    ## Fake lapse array 
+    lapse = np.ones(len(t))
+    ff = open(p + '/' + str(n) + '.dat', 'w')
+    np.savetxt(ff, np.c_[t,x,y,z,lapse])
+    ff.close()
 
 def GetGeodesicIndices(p, infinity=True):
     """ Return the indices of all of the geodesics we have printed to file 
@@ -475,7 +475,7 @@ def main():
             print("Removed previous Trajectories.h5 file")
         except:
             print("Trajectories.h5 file did not previously exist")
-        MakeGeodesicDatFiles(args.dir, 97, 100)
+        MakeGeodesicDatFiles(args.dir, 0, 1000)
 
     ## Compute zero crossings
     if (args.zerocrossings):
