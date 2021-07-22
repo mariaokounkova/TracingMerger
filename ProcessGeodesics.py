@@ -475,7 +475,7 @@ def main():
             print("Removed previous Trajectories.h5 file")
         except:
             print("Trajectories.h5 file did not previously exist")
-        MakeGeodesicDatFiles(args.dir, 0, 1000)
+        MakeGeodesicDatFiles(args.dir, 0, 10000)
 
     ## Compute zero crossings
     if (args.zerocrossings):
