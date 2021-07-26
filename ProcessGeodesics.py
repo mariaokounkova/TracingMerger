@@ -214,7 +214,7 @@ def WriteGeodesicTrajectoryDatFile(p, n):
     np.savetxt(ff, np.c_[t,x,y,z,lapse])
     ff.close()
 
-def GetGeodesicIndices(p, infinity=True):
+def GetGeodesicIndices(p, infinity=False):
     """ Return the indices of all of the geodesics we have printed to file 
         If infinity == True, only returnt the geodesics that make it out to infinity """
     f = p + '/Trajectories.h5'
@@ -310,7 +310,7 @@ def GetGeodesicsXTurns(p):
     ns, turns = np.loadtxt(f, comments="#",usecols=([0,1]),unpack=True,dtype=int)
     return ns, turns
 
-def GetGeodesicsXTurnsIndices(p, N, infinity=True):
+def GetGeodesicsXTurnsIndices(p, N, infinity=False):
     """ Return the indices of the geodesics that make N x turns 
         If infinity == True, return only the ones that make it to infinity"""
     ns, turns = GetGeodesicsXTurns(p)
@@ -320,7 +320,7 @@ def GetGeodesicsXTurnsIndices(p, N, infinity=True):
         indices = list(set(indices_infinity) & set(indices))
     return indices
 
-def GetGeodesicsXTurnsIndicesGreater(p, N, infinity=True, N_less = 1e6):
+def GetGeodesicsXTurnsIndicesGreater(p, N, infinity=False, N_less = 1e6):
     """ Return the indices of the geodesics that make N or more x turns 
         If infinity == True, return only the ones that make it to infinity"""
     ns, turns = GetGeodesicsXTurns(p)
@@ -332,7 +332,7 @@ def GetGeodesicsXTurnsIndicesGreater(p, N, infinity=True, N_less = 1e6):
         indices = list(set(indices_infinity) & set(indices))
     return indices
     
-def GetGeodesicsMaxXTurns(p, infinity=True):
+def GetGeodesicsMaxXTurns(p, infinity=False):
     """ Return the maximum number N of zero crossings for a given run, 
         along with the indices of the geodesics that make N zero-crossings 
         If infinity == Ture, only return the ones that make it to infinity"""
