@@ -250,7 +250,7 @@ def GetGeodesicsZeroCrossings(p):
     ns, zero_crossings = np.loadtxt(f, comments="#",usecols=([0,1]),unpack=True,dtype=int)
     return ns, zero_crossings
 
-def GetGeodesicsZeroCrossingsIndices(p, N, infinity=True):
+def GetGeodesicsZeroCrossingsIndices(p, N, infinity=False):
     """ Return the indices of the geodesics that make N zero-crossings 
         If infinity == True, return only the ones that make it to infinity"""
     ns, zero_crossings = GetGeodesicsZeroCrossings(p)
@@ -260,7 +260,7 @@ def GetGeodesicsZeroCrossingsIndices(p, N, infinity=True):
         indices = list(set(indices_infinity) & set(indices))
     return indices
 
-def GetGeodesicsZeroCrossingsIndicesGreater(p, N, infinity=True):
+def GetGeodesicsZeroCrossingsIndicesGreater(p, N, infinity=False):
     """ Return the indices of the geodesics that make N or more zero-crossings 
         If infinity == True, return only the ones that make it to infinity"""
     ns, zero_crossings = GetGeodesicsZeroCrossings(p)
@@ -270,7 +270,7 @@ def GetGeodesicsZeroCrossingsIndicesGreater(p, N, infinity=True):
         indices = list(set(indices_infinity) & set(indices))
     return indices
 
-def GetGeodesicsMaxZeroCrossings(p, infinity=True):
+def GetGeodesicsMaxZeroCrossings(p, infinity=False):
     """ Return the maximum number N of zero crossings for a given run, 
         along with the indices of the geodesics that make N zero-crossings 
         If infinity == Ture, only return the ones that make it to infinity"""
